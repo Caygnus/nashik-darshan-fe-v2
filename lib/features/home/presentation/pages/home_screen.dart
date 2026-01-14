@@ -18,16 +18,41 @@ import 'package:nashik/features/home/presentation/widgets/transparent_app_bar.da
 // TODO: Uncomment when needed
 // import 'package:nashik/features/home/presentation/widgets/travel_services/travel_services_section.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(final BuildContext context) {
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
           // Main content with hero image at top
           SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               children: [
                 const HeroImageHeader(),
@@ -78,7 +103,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           // Transparent AppBar overlay
-          const TransparentAppBarWidget(),
+          TransparentAppBarWidget(scrollOffset: _scrollOffset),
         ],
       ),
     );
