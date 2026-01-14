@@ -13,7 +13,7 @@ class IosApp extends StatelessWidget {
         applyThemeToAll: true,
         primaryColor: Colors.purple,
       ),
-      routerConfig: Approuter.router,
+      routerConfig: AppRouter.router,
     );
   }
 }

@@ -28,7 +28,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     //   if (event == AuthChangeEvent.signedIn && session != null) {
     //     try {
-    //       final currentLocation = Approuter.router.location;
+    //       final currentLocation = AppRouter.router.location;
     //       if (!currentLocation.contains(OAuthCallbackPage.routePath)) {
     //         _loadCurrentUser();
     //       }

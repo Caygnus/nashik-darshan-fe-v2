@@ -14,7 +14,7 @@ class AndroidApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       scaffoldMessengerKey: scaffoldMessengerKey,
       themeMode: ThemeMode.light,
-      routerConfig: Approuter.router,
+      routerConfig: AppRouter.router,
     );
   }
 }
