@@ -1,4 +1,4 @@
-import 'package:nashik/core/domain/usecases/base_usecase.dart';
+import 'package:nashik/core/domain/use_cases/base_usecase.dart';
 import 'package:nashik/core/utils/result.dart';
 import 'package:nashik/features/auth/domain/entities/user.dart';
 import 'package:nashik/features/auth/domain/repositories/auth_repository.dart';

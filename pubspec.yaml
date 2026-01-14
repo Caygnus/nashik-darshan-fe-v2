@@ -45,7 +45,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
+    # - .env
     - assets/icons/
     - assets/images/
     - assets/images/onboarding/

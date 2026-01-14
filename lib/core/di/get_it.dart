@@ -5,9 +5,9 @@ import 'package:nashik/features/auth/data/datasources/auth_remote_datasource.dar
 import 'package:nashik/features/auth/data/datasources/auth_supabase_datasource.dart';
 import 'package:nashik/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:nashik/features/auth/domain/repositories/auth_repository.dart';
-import 'package:nashik/features/auth/domain/usecases/get_current_user.dart';
-import 'package:nashik/features/auth/domain/usecases/signin_with_email.dart';
-import 'package:nashik/features/auth/domain/usecases/signup_with_email.dart';
+import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
+import 'package:nashik/features/auth/domain/use_cases/signin_with_email.dart';
+import 'package:nashik/features/auth/domain/use_cases/signup_with_email.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 
 final locator = GetIt.instance;

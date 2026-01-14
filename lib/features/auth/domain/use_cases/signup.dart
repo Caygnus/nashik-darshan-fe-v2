@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:nashik/core/domain/usecases/base_usecase.dart';
+import 'package:nashik/core/domain/use_cases/base_usecase.dart';
 import 'package:nashik/core/error/failures/validation_failure.dart';
 import 'package:nashik/core/utils/result.dart';
 import 'package:nashik/features/auth/domain/dtos/signup_request.dart';

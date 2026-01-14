@@ -9,7 +9,7 @@ import 'package:nashik/features/auth/domain/entities/user.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
 import 'package:nashik/features/auth/presentation/pages/login_page.dart';
-import 'package:nashik/widgets/app_text.dart';
+import 'package:nashik/core/presentation/widgets/app_text.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nashik/core/pages/bottom_bar_page.dart';
-import 'package:nashik/core/pages/deep_link_test_page.dart';
-import 'package:nashik/core/supabase/config.dart';
+import 'package:nashik/core/presentation/pages/bottom_bar_page.dart';
+import 'package:nashik/core/presentation/pages/deep_link_test_page.dart';
 import 'package:nashik/features/auth/presentation/pages/login_page.dart';
 import 'package:nashik/features/auth/presentation/pages/oauth_callback_page.dart';
 import 'package:nashik/features/auth/presentation/pages/signup_page.dart';
@@ -257,12 +256,13 @@ String? handleRedirect(BuildContext context, GoRouterState state) {
     return deepLinkType.getRoutePath(uri);
   }
 
+  // TODO: Uncomment when Supabase is initialized
   // Handle protected routes (only for normal app navigation, not deep links)
-  final user = SupabaseConfig.client.auth.currentUser;
-  if (user == null && protectedRoutes.contains(path)) {
-    debugPrint('🔒 Protected route without auth, redirecting to login');
-    return LoginPage.routePath;
-  }
+  // final user = SupabaseConfig.client.auth.currentUser;
+  // if (user == null && protectedRoutes.contains(path)) {
+  //   debugPrint('🔒 Protected route without auth, redirecting to login');
+  //   return LoginPage.routePath;
+  // }
 
   debugPrint('✅ No redirect needed');
   return null;
