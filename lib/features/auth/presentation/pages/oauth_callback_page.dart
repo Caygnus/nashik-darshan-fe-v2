@@ -3,11 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/error/failures/server_failure.dart';
+import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/supabase/config.dart';
 import 'package:nashik/features/auth/domain/dtos/signup_request.dart';
 import 'package:nashik/features/auth/domain/repositories/auth_repository.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:nashik/features/home/presentation/pages/home_screen.dart';
 
 class OAuthCallbackPage extends StatefulWidget {
   const OAuthCallbackPage({super.key});
@@ -93,7 +93,7 @@ class _OAuthCallbackPageState extends State<OAuthCallbackPage> {
         context.read<AuthCubit>().loadCurrentUser();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            context.goNamed(HomeScreen.routeName);
+            context.goNamed(AppRouteNames.home);
           }
         });
       }
@@ -188,7 +188,7 @@ class _OAuthCallbackPageState extends State<OAuthCallbackPage> {
   }
 
   void _handleGoToHome() {
-    context.goNamed(HomeScreen.routeName);
+    context.goNamed(AppRouteNames.home);
   }
 
   @override

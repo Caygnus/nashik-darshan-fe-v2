@@ -13,9 +13,10 @@ class AppRoutePaths {
   static const String oauthCallback = '/oauth-callback';
 
   // ==================== Main Tab Routes ====================
-  static const String home = '/home';
-  static const String category = '/category';
   static const String itinerary = '/itinerary';
+  static const String category = '/category';
+  static const String home = '/home';
+  static const String events = '/events';
   static const String profile = '/profile';
 
   // ==================== Feature Routes ====================

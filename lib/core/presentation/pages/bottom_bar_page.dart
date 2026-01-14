@@ -13,30 +13,37 @@ class BottomBarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get system navigation bar height
-    final systemNavigationBarHeight = MediaQuery.of(context).padding.bottom;
-
+    // Debug: Log current index and route
+    debugPrint('🔍 BottomBarPage: currentIndex=${shell.currentIndex}');
+    
     return Scaffold(
       body: shell,
       extendBody: true,
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.only(bottom: systemNavigationBarHeight),
+      bottomNavigationBar: Container(
+        margin: EdgeInsets.zero,
+        padding: EdgeInsets.zero,
+        alignment: Alignment.bottomCenter,
         child: CurvedNavigationBar(
           index: shell.currentIndex,
           color: AppColors.primary,
           buttonBackgroundColor: AppColors.primary,
           backgroundColor: AppColors.white,
           animationCurve: Curves.ease,
-          height: 55.h,
-          onTap: (value) => shell.goBranch(value),
+          height: 60.h,
+          onTap: (value) {
+            debugPrint('🔍 BottomBarPage: Tapped index=$value, currentIndex=${shell.currentIndex}');
+            shell.goBranch(value);
+          },
           items: [
-            // Home Icon
-            Icon(IonIcons.home, size: 26.r, color: AppColors.white),
-            // Categories Icon
-            Icon(IonIcons.grid, size: 26.r, color: AppColors.white),
-            // Itinerary Icon
+            // Itinerary Icon (Index 0)
             Icon(HeroIcons.map, size: 26.r, color: AppColors.white),
-            // Profile Icon
+            // Categories Icon (Index 1)
+            Icon(IonIcons.grid, size: 26.r, color: AppColors.white),
+            // Home Icon (Index 2) - Center position, main screen
+            Icon(IonIcons.home, size: 26.r, color: AppColors.white),
+            // Events Icon (Index 3)
+            Icon(IonIcons.calendar, size: 26.r, color: AppColors.white),
+            // Profile Icon (Index 4)
             Icon(HeroIcons.user, size: 26.r, color: AppColors.white),
           ],
         ),

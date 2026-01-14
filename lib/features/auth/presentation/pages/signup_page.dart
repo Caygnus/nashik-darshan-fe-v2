@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/theme/colors.dart';
 import 'package:nashik/core/utils/loading_overlay.dart';
 import 'package:nashik/core/utils/snackbar.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
-import 'package:nashik/features/auth/presentation/pages/login_page.dart';
-import 'package:nashik/features/home/presentation/pages/home_screen.dart';
 
 enum PasswordStrength { weak, medium, strong }
 
@@ -133,7 +132,7 @@ class _SignupPageState extends State<SignupPage> {
         state.when(
           initial: () {},
           loading: () {},
-          authenticated: (_) => context.goNamed(HomeScreen.routeName),
+          authenticated: (_) => context.goNamed(AppRouteNames.home),
           unauthenticated: () {},
           error: (String message) => Snackbar.showError(message),
         );
@@ -558,7 +557,7 @@ class _SignupPageState extends State<SignupPage> {
                               SizedBox(height: 4.h),
                               TextButton(
                                 onPressed: () {
-                                  context.push(LoginPage.routePath);
+                                  context.pushNamed(AppRouteNames.login);
                                 },
                                 child: Text(
                                   'Sign In Here',

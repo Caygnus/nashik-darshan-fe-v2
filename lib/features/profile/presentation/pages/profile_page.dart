@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/presentation/widgets/app_text.dart';
+import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/theme/colors.dart';
 import 'package:nashik/core/utils/loading_overlay.dart';
 import 'package:nashik/core/utils/snackbar.dart';
 import 'package:nashik/features/auth/domain/entities/user.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
-import 'package:nashik/features/auth/presentation/pages/login_page.dart';
-import 'package:nashik/core/presentation/widgets/app_text.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-  static const routeName = 'ProfilePage';
-  static const routePath = '/ProfilePage';
 
   void _handleLogout(BuildContext context) {
     showDialog<void>(
@@ -61,7 +59,7 @@ class ProfilePage extends StatelessWidget {
           loading: () {},
           authenticated: (_) {},
           unauthenticated: () {
-            context.goNamed(LoginPage.routeName);
+            context.goNamed(AppRouteNames.login);
           },
           error: (String message) {
             Snackbar.showError(message);

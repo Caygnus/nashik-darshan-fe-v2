@@ -30,11 +30,13 @@ class AppRouter {
   // Navigator keys for different navigation contexts
   static final GlobalKey<NavigatorState> parentNavigatorKey =
       GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> homeTabNavigatorKey =
+  static final GlobalKey<NavigatorState> itineraryTabNavigatorKey =
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> categoryTabNavigatorKey =
       GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> itineraryTabNavigatorKey =
+  static final GlobalKey<NavigatorState> homeTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> eventsTabNavigatorKey =
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> profileTabNavigatorKey =
       GlobalKey<NavigatorState>();
@@ -67,7 +69,7 @@ class AppRouter {
       routes: routes,
       redirect: RouteRedirect.handleRedirect,
       observers: [_routeObserver],
-      debugLogDiagnostics: false,
+      debugLogDiagnostics: true, // Enable debug logging to diagnose routing issues
     );
   }
 

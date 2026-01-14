@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 class IternaryPage extends StatelessWidget {
   const IternaryPage({super.key});
-  static const routeName = 'IternaryPage';
-  static const routePath = '/IternaryPage';
 
   @override
   Widget build(BuildContext context) {

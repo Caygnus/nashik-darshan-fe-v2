@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nashik/features/home/presentation/pages/home_screen.dart';
+import 'package:nashik/core/router/route_names.dart';
 
 class DeepLinkTestPage extends StatelessWidget {
   const DeepLinkTestPage({super.key});
@@ -85,7 +85,7 @@ class DeepLinkTestPage extends StatelessWidget {
                 const SizedBox(height: 48),
                 ElevatedButton(
                   onPressed: () {
-                    context.goNamed(HomeScreen.routeName);
+                    context.goNamed(AppRouteNames.home);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,

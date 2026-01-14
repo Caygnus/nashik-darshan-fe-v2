@@ -91,16 +91,20 @@ class AppNavigator {
 
   // ==================== Main Tab Navigation ====================
 
-  static void goToHome(BuildContext context) {
-    goNamed(context, AppRouteNames.home);
+  static void goToItinerary(BuildContext context) {
+    goNamed(context, AppRouteNames.itinerary);
   }
 
   static void goToCategory(BuildContext context) {
     goNamed(context, AppRouteNames.category);
   }
 
-  static void goToItinerary(BuildContext context) {
-    goNamed(context, AppRouteNames.itinerary);
+  static void goToHome(BuildContext context) {
+    goNamed(context, AppRouteNames.home);
+  }
+
+  static void goToEvents(BuildContext context) {
+    goNamed(context, AppRouteNames.events);
   }
 
   static void goToProfile(BuildContext context) {
