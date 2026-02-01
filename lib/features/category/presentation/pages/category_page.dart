@@ -100,40 +100,43 @@ class _CategoryPageState extends State<CategoryPage> {
       debugPrint('⚠️ No categories but not loading - showing empty state');
     }
     
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(56.h),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          PreferredSize(
+            preferredSize: Size.fromHeight(56.h),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            automaticallyImplyLeading: false, // Remove back button
-            title: Text(
-              'Categories',
-              style: _getPoppinsStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600, // Semibold
-                color: const Color(0xFF111827),
-                height: 28 / 18, // Line height 28
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                automaticallyImplyLeading: false,
+                title: Text(
+                  'Categories',
+                  style: _getPoppinsStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF111827),
+                    height: 28 / 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                centerTitle: true,
               ),
-              textAlign: TextAlign.center,
             ),
-            centerTitle: true,
           ),
-        ),
-      ),
-      body: Builder(
+          Expanded(
+            child: Builder(
         builder: (context) {
           if (_isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -273,6 +276,9 @@ class _CategoryPageState extends State<CategoryPage> {
             ),
           );
         },
+            ),
+          ),
+        ],
       ),
     );
   }

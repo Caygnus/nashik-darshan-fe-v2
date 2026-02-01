@@ -48,11 +48,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Main content with hero image at top
-          SingleChildScrollView(
+    return Stack(
+      children: [
+        // Main content with hero image at top
+        SingleChildScrollView(
             controller: _scrollController,
             child: Column(
               children: [
@@ -107,10 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          // Transparent AppBar overlay
-          TransparentAppBarWidget(scrollOffset: _scrollOffset),
-        ],
-      ),
+        // Transparent AppBar overlay
+        TransparentAppBarWidget(scrollOffset: _scrollOffset),
+      ],
     );
   }
 }

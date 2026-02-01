@@ -19,33 +19,36 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF1F2937)),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Text(
-          'Events',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1F2937),
-            fontFamily: 'Roboto',
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF1F2937)),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            title: Text(
+              'Events',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1F2937),
+                fontFamily: 'Roboto',
+              ),
+            ),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: Icon(Icons.bookmark_border, size: 24.sp, color: const Color(0xFF1F2937)),
+                onPressed: () => context.pushNamed(AppRouteNames.savedEvents),
+              ),
+            ],
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.bookmark_border, size: 24.sp, color: const Color(0xFF1F2937)),
-            onPressed: () => context.pushNamed(AppRouteNames.savedEvents),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
+          Expanded(
+            child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.only(bottom: 80.h), // Padding for bottom navigation bar
         child: Column(
@@ -68,6 +71,9 @@ class _EventsPageState extends State<EventsPage> {
             _buildEventInformationSection(),
           ],
         ),
+      ),
+    ),
+        ],
       ),
     );
   }

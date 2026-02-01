@@ -4,7 +4,7 @@ This document describes the routing architecture and navigation setup for the Na
 
 ## Folder Structure
 
-```
+```text
 lib/core/router/
 ├── app_router.dart              # Main router configuration
 ├── route_names.dart              # Centralized route names

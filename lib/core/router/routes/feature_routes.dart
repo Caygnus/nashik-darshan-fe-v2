@@ -13,13 +13,16 @@ import 'package:nashik/features/iternary/presentation/pages/add_stops_page.dart'
 import 'package:nashik/features/iternary/presentation/pages/customize_trip_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/itinerary_detail_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/my_itineraries_page.dart';
+import 'package:nashik/features/iternary/presentation/pages/saved_itineraries_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/saved_itinerary_page.dart';
 import 'package:nashik/features/places/presentation/pages/category_detail_page.dart';
 import 'package:nashik/features/places/presentation/pages/place_detail_page.dart';
 import 'package:nashik/features/spiritual/presentation/pages/aarti_timing_page.dart';
+import 'package:nashik/features/spiritual/presentation/pages/saved_spiritual_stories_page.dart';
 import 'package:nashik/features/spiritual/presentation/pages/temple_darshan_page.dart';
 import 'package:nashik/features/street_food/presentation/pages/street_food_screen.dart';
 import 'package:nashik/features/transport/presentation/pages/transport_screen.dart';
+import 'package:nashik/features/wishlist/presentation/pages/wishlist_page.dart';
 
 /// Feature routes (standalone screens)
 class FeatureRoutes {
@@ -33,6 +36,30 @@ class FeatureRoutes {
         name: AppRouteNames.myItineraries,
         pageBuilder: (context, state) => AppRouter.getPage(
           child: const MyItinerariesPage(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.savedItinerariesList,
+        name: AppRouteNames.savedItinerariesList,
+        pageBuilder: (context, state) => AppRouter.getPage(
+          child: const SavedItinerariesPage(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.wishlist,
+        name: AppRouteNames.wishlist,
+        pageBuilder: (context, state) => AppRouter.getPage(
+          child: const WishlistPage(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.savedSpiritualStories,
+        name: AppRouteNames.savedSpiritualStories,
+        pageBuilder: (context, state) => AppRouter.getPage(
+          child: const SavedSpiritualStoriesPage(),
           state: state,
         ),
       ),

@@ -2,10 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/theme/colors.dart';
 
-/// My Itineraries Page
-/// View and manage personal itineraries: create custom, use templates, search, and browse.
+/// Saved itinerary status for filter and card display.
+enum SavedItineraryStatus { all, upcoming, completed, draft }
+
+String _formatSavedAt(DateTime d) {
+  return DateFormat('d MMM yyyy \'at\' hh.mm a').format(d);
+}
+
+/// Lightweight model for a saved itinerary card on this page.
+class _SavedItineraryItem {
+  const _SavedItineraryItem({
+    required this.id,
+    required this.title,
+    required this.savedAt,
+    required this.durationDays,
+    required this.groupType,
+    required this.adults,
+    required this.children,
+    required this.status,
+    required this.imagePath,
+  });
+
+  final String id;
+  final String title;
+  final DateTime savedAt;
+  final int durationDays;
+  final String groupType;
+  final int adults;
+  final int children;
+  final SavedItineraryStatus status;
+  final String imagePath;
+
+  int get totalTravellers => adults + children;
+  String get travellerBreakdown {
+    final parts = <String>[];
+    if (adults > 0) parts.add('$adults Adult${adults > 1 ? 's' : ''}');
+    if (children > 0) parts.add('$children Child');
+    return parts.join(', ');
+  }
+}
+
+/// Saved itinerary page: search, filter chips, list of saved itinerary cards, Create New Itinerary button.
 class MyItinerariesPage extends StatefulWidget {
   const MyItinerariesPage({super.key});
 
@@ -14,201 +55,122 @@ class MyItinerariesPage extends StatefulWidget {
 }
 
 class _MyItinerariesPageState extends State<MyItinerariesPage> {
-  String _selectedTab = 'All';
-  final List<String> _tabs = ['All', 'Recent', 'Saved', 'Shared', 'Recommended'];
+  final TextEditingController _searchController = TextEditingController();
+  SavedItineraryStatus _selectedFilter = SavedItineraryStatus.all;
+  static const List<String> _filterLabels = ['All', 'Upcoming', 'Completed', 'Draft'];
+
+  static final List<_SavedItineraryItem> _allItems = [
+    _SavedItineraryItem(
+      id: '1',
+      title: 'Spiritual Nashik Tour',
+      savedAt: DateTime(2025, 1, 15, 14, 52),
+      durationDays: 4,
+      groupType: 'Family',
+      adults: 2,
+      children: 1,
+      status: SavedItineraryStatus.upcoming,
+      imagePath: 'assets/png/trambak.png',
+    ),
+    _SavedItineraryItem(
+      id: '2',
+      title: 'Adventure Nashik Tour',
+      savedAt: DateTime(2025, 1, 10, 11, 30),
+      durationDays: 2,
+      groupType: 'Friends',
+      adults: 3,
+      children: 0,
+      status: SavedItineraryStatus.completed,
+      imagePath: 'assets/png/trambak.png',
+    ),
+    _SavedItineraryItem(
+      id: '3',
+      title: 'Nashik Darshan Circuit',
+      savedAt: DateTime(2025, 1, 8, 09, 15),
+      durationDays: 5,
+      groupType: 'Family',
+      adults: 5,
+      children: 4,
+      status: SavedItineraryStatus.draft,
+      imagePath: 'assets/png/herohome-bg.png',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<_SavedItineraryItem> get _filteredItems {
+    if (_selectedFilter == SavedItineraryStatus.all) return _allItems;
+    return _allItems.where((e) => e.status == _selectedFilter).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final items = _filteredItems;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF111827)),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            size: 20.sp,
+            color: AppColors.darkText,
+          ),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'My Itineraries',
+          'Saved itinerary',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF111827),
-            fontFamily: 'Roboto',
+            color: AppColors.darkText,
+            fontFamily: GoogleFonts.roboto().fontFamily,
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.more_vert, size: 24.sp, color: const Color(0xFF111827)),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 16.h),
-              _buildCreateCustomButton(),
-              SizedBox(height: 12.h),
-              _buildUseSmartTemplateButton(),
-              SizedBox(height: 16.h),
-              Text(
-                'Plan your perfect Nashik journey your way',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.normal,
-                  color: const Color(0xFF6B7280),
-                  fontFamily: 'Roboto',
-                ),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(height: 16.h),
+            _buildSearchBar(),
+            SizedBox(height: 16.h),
+            _buildFilterChips(),
+            SizedBox(height: 16.h),
+            Text(
+              '${items.length} Itineraries',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: AppColors.grey,
+                fontFamily: GoogleFonts.roboto().fontFamily,
               ),
-              SizedBox(height: 20.h),
-              _buildTabsRow(),
-              SizedBox(height: 12.h),
-              _buildSearchBar(),
-              SizedBox(height: 20.h),
-              _buildSuggestedBanner(),
-              SizedBox(height: 20.h),
-              _buildItineraryCard(
-                imagePath: 'assets/png/trambak.png',
-                title: 'Spiritual Circuit',
-                duration: '2 Days',
-                badgeText: 'High crowd expected',
-                badgeColor: const Color(0xFFDC2626),
-                badgeTextColor: Colors.white,
-                isFavorited: false,
-                onViewFullPlan: () => context.pushNamed(
-                  AppRouteNames.itineraryDetail,
-                  pathParameters: {'itineraryId': 'spiritual-circuit'},
-                  queryParameters: {'title': 'Spiritual Circuit'},
-                ),
-              ),
-              SizedBox(height: 16.h),
-              _buildItineraryCard(
-                imagePath: 'assets/png/trambak.png',
-                title: 'Winery Tour',
-                duration: '2 Days',
-                badgeText: 'Wine & Food Trail',
-                badgeColor: const Color(0xFFEDE9FE),
-                badgeTextColor: const Color(0xFF6D28D9),
-                isFavorited: true,
-                onViewFullPlan: () => context.pushNamed(
-                  AppRouteNames.itineraryDetail,
-                  pathParameters: {'itineraryId': 'winery-tour'},
-                  queryParameters: {'title': 'Winery Tour'},
-                ),
-              ),
-              SizedBox(height: 24.h),
-              _buildPopularTemplatesSection(),
-              SizedBox(height: 80.h),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreateCustomButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 48.h,
-      child: Material(
-        color: const Color(0xFFFF9820),
-        borderRadius: BorderRadius.circular(12.r),
-        child: InkWell(
-          onTap: () => context.pushNamed(AppRouteNames.customizeTrip),
-          borderRadius: BorderRadius.circular(12.r),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add, size: 22.sp, color: Colors.white),
-              SizedBox(width: 8.w),
-              Text(
-                'Create Custom Itinerary',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Roboto',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUseSmartTemplateButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 48.h,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(12.r),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.auto_awesome, size: 22.sp, color: const Color(0xFFFF9820)),
-                SizedBox(width: 8.w),
-                Text(
-                  'Use Smart Template',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFFFF9820),
-                    fontFamily: 'Roboto',
+            SizedBox(height: 12.h),
+            ...items.map((item) => Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: _SavedItineraryCard(
+                    item: item,
+                    onTap: () => context.pushNamed(
+                      AppRouteNames.itineraryDetail,
+                      pathParameters: {'itineraryId': item.id},
+                      queryParameters: {'title': item.title},
+                    ),
+                    onMore: () => _showCardMenu(context, item),
                   ),
-                ),
-              ],
-            ),
-          ),
+                )),
+            SizedBox(height: 24.h),
+            _buildCreateNewButton(),
+            SizedBox(height: 80.h),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTabsRow() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _tabs.map((tab) {
-          final isSelected = _selectedTab == tab;
-          return Padding(
-            padding: EdgeInsets.only(right: 8.w),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedTab = tab),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFF9820) : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(9999.r),
-                ),
-                child: Text(
-                  tab,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF4B5563),
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }
@@ -216,70 +178,35 @@ class _MyItinerariesPageState extends State<MyItinerariesPage> {
   Widget _buildSearchBar() {
     return Container(
       height: 48.h,
-      padding: EdgeInsets.symmetric(horizontal: 14.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: AppColors.lightGrey,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
-          Icon(Icons.search, size: 20.sp, color: const Color(0xFF9CA3AF)),
-          SizedBox(width: 10.w),
-          Expanded(
-            child: Text(
-              'Search places, temples, vineyards...',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: const Color(0xFF9CA3AF),
-                fontFamily: 'Roboto',
-              ),
-            ),
-          ),
-          Icon(Icons.tune, size: 22.sp, color: const Color(0xFF6B7280)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestedBanner() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDCFCE7),
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.lightbulb_outline, size: 28.sp, color: const Color(0xFF16A34A)),
+          Icon(Icons.search, size: 22.sp, color: AppColors.grey),
           SizedBox(width: 12.w),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Suggested for you',
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF16A34A),
-                    fontFamily: 'Roboto',
-                  ),
+            child: TextField(
+              controller: _searchController,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.darkText,
+                fontFamily: GoogleFonts.roboto().fontFamily,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search trips, places, or dates',
+                hintStyle: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.grey,
+                  fontFamily: GoogleFonts.roboto().fontFamily,
                 ),
-                SizedBox(height: 4.h),
-                Text(
-                  '2-Day Spiritual Circuit covering Trimbakeshwar, Bramhagiri & Anjaneri',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.normal,
-                    color: const Color(0xFF4B5563),
-                    height: 1.35,
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-              ],
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
           ),
         ],
@@ -287,316 +214,327 @@ class _MyItinerariesPageState extends State<MyItinerariesPage> {
     );
   }
 
-  Widget _buildItineraryCard({
-    required String imagePath,
-    required String title,
-    required String duration,
-    required String badgeText,
-    required Color badgeColor,
-    required Color badgeTextColor,
-    required bool isFavorited,
-    VoidCallback? onViewFullPlan,
-  }) {
-    const tags = ['Trimbakeshwar Temple', 'Panchavati', 'Kalaram Temple'];
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12.r),
-                  topRight: Radius.circular(12.r),
+  Widget _buildFilterChips() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(_filterLabels.length, (i) {
+          final status = SavedItineraryStatus.values[i];
+          final label = _filterLabels[i];
+          final isSelected = _selectedFilter == status;
+          return Padding(
+            padding: EdgeInsets.only(right: 10.w),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedFilter = status),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : AppColors.lightGrey,
+                  borderRadius: BorderRadius.circular(9999.r),
                 ),
-                child: Image.asset(
-                  imagePath,
-                  width: double.infinity,
-                  height: 180.h,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 180.h,
-                    color: const Color(0xFFF3F4F6),
-                    child: Icon(Icons.image_not_supported, size: 40.sp, color: Colors.grey),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 12.h,
-                left: 12.w,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: badgeColor,
-                    borderRadius: BorderRadius.circular(9999.r),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w500,
-                      color: badgeTextColor,
-                      fontFamily: 'Roboto',
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 12.h,
-                right: 12.w,
-                child: Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isFavorited ? Icons.favorite : Icons.favorite_border,
-                    size: 20.sp,
-                    color: isFavorited ? Colors.red : Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(12.r),
-                bottomRight: Radius.circular(12.r),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1F2937),
-                          fontFamily: 'Roboto',
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEDE9FE),
-                        borderRadius: BorderRadius.circular(9999.r),
-                      ),
-                      child: Text(
-                        duration,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF7C3AED),
-                          fontFamily: 'Roboto',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  '2 - 3 Hours per Spot',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.normal,
-                    color: const Color(0xFF6B7280),
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  'Key Spots',
+                child: Text(
+                  label,
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2937),
-                    fontFamily: 'Roboto',
+                    color: isSelected ? AppColors.white : AppColors.darkText,
+                    fontFamily: GoogleFonts.roboto().fontFamily,
                   ),
                 ),
-                SizedBox(height: 8.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: [
-                    ...tags.map((t) => _buildTag(t)),
-                    _buildTag('+ 4 more'),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 44.h,
-                  child: Material(
-                    color: const Color(0xFFFF9820),
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: InkWell(
-                      onTap: onViewFullPlan ?? () {},
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: Center(
-                        child: Text(
-                          'View Full Plan',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            fontFamily: 'Roboto',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTag(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(9999.r),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11.sp,
-          fontWeight: FontWeight.normal,
-          color: const Color(0xFF4B5563),
-          fontFamily: 'Roboto',
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPopularTemplatesSection() {
-    final templates = [
-      ('Spiritual Pilgrimage', '3 Days · 12 temples', Icons.account_balance, const Color(0xFFFFF7ED), const Color(0xFFEA580C)),
-      ('Wine & Food Tour', '2 Days · 6 vineyards', Icons.wine_bar, const Color(0xFFF3E8FF), const Color(0xFF7C3AED)),
-      ('Adventure + Trekking', '1 Day · 4 trails', Icons.terrain, const Color(0xFFDCFCE7), const Color(0xFF16A34A)),
-      ('Family Darshan Circuit', '5 Days · 20 locations', Icons.family_restroom, const Color(0xFFDBEAFE), const Color(0xFF2563EB)),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Popular Templates',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1F2937),
-                fontFamily: 'Roboto',
               ),
             ),
-            GestureDetector(
-              onTap: () {},
-              child: Text(
-                'View All',
-                style: GoogleFonts.montserrat(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFFF9820),
-                ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCreateNewButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 52.h,
+      child: FilledButton(
+        onPressed: () => context.pushNamed(AppRouteNames.customizeTrip),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          elevation: 0,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add, size: 24.sp),
+            SizedBox(width: 10.w),
+            Text(
+              'Create New Itinerary',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: GoogleFonts.roboto().fontFamily,
               ),
             ),
           ],
         ),
-        SizedBox(height: 12.h),
-        ...templates.map((t) => Padding(
-          padding: EdgeInsets.only(bottom: 12.h),
-          child: _buildTemplateCard(
-            title: t.$1,
-            subtitle: t.$2,
-            icon: t.$3,
-            iconBgColor: t.$4,
-            iconColor: t.$5,
-          ),
-        )),
-      ],
+      ),
     );
   }
 
-  Widget _buildTemplateCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color iconBgColor,
-    required Color iconColor,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+  void _showCardMenu(BuildContext context, _SavedItineraryItem item) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 48.w,
-            height: 48.w,
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(icon, size: 26.sp, color: iconColor),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ListTile(
+                leading: Icon(Icons.edit_outlined, size: 22.sp),
+                title: Text('Edit', style: TextStyle(fontSize: 16.sp)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.pushNamed(
+                    AppRouteNames.itineraryDetail,
+                    pathParameters: {'itineraryId': item.id},
+                    queryParameters: {'title': item.title},
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline, size: 22.sp),
+                title: Text('Delete', style: TextStyle(fontSize: 16.sp, color: AppColors.errorColor)),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
           ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      ),
+    );
+  }
+}
+
+class _SavedItineraryCard extends StatelessWidget {
+  const _SavedItineraryCard({
+    required this.item,
+    required this.onTap,
+    required this.onMore,
+  });
+
+  final _SavedItineraryItem item;
+  final VoidCallback onTap;
+  final VoidCallback onMore;
+
+  static Color _statusColor(SavedItineraryStatus s) {
+    switch (s) {
+      case SavedItineraryStatus.upcoming:
+        return const Color(0xFFFCD34D); // yellow
+      case SavedItineraryStatus.completed:
+        return AppColors.primary; // orange
+      case SavedItineraryStatus.draft:
+        return const Color(0xFF3B82F6); // blue
+      case SavedItineraryStatus.all:
+        return AppColors.lightGrey;
+    }
+  }
+
+  static Color _statusTextColor(SavedItineraryStatus s) {
+    switch (s) {
+      case SavedItineraryStatus.draft:
+        return AppColors.white;
+      default:
+        return AppColors.darkText;
+    }
+  }
+
+  static String _statusLabel(SavedItineraryStatus s) {
+    switch (s) {
+      case SavedItineraryStatus.upcoming:
+        return 'Upcoming';
+      case SavedItineraryStatus.completed:
+        return 'Completed';
+      case SavedItineraryStatus.draft:
+        return 'Draft';
+      case SavedItineraryStatus.all:
+        return 'All';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final statusBg = _statusColor(item.status);
+    final statusTextColor = _statusTextColor(item.status);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r),
+        child: Container(
+          height: 220.h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16.r),
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1F2937),
-                    fontFamily: 'Roboto',
+                Image.asset(
+                  item.imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppColors.lightGrey,
+                    child: Icon(Icons.image_not_supported, size: 48.sp, color: AppColors.grey),
                   ),
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.normal,
-                    color: const Color(0xFF6B7280),
-                    fontFamily: 'Roboto',
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.2),
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black.withValues(alpha: 0.85),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 14.h,
+                  left: 14.w,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      _statusLabel(item.status),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: statusTextColor,
+                        fontFamily: GoogleFonts.roboto().fontFamily,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 10.h,
+                  right: 10.w,
+                  child: IconButton(
+                    onPressed: onMore,
+                    icon: Icon(Icons.more_vert, size: 24.sp, color: AppColors.white),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(minWidth: 40.w, minHeight: 40.h),
+                  ),
+                ),
+                Positioned(
+                  left: 14.w,
+                  right: 14.w,
+                  bottom: 14.h,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.title,
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.white,
+                          fontFamily: GoogleFonts.roboto().fontFamily,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Saved on ${_formatSavedAt(item.savedAt)}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppColors.white.withValues(alpha: 0.95),
+                          fontFamily: GoogleFonts.roboto().fontFamily,
+                        ),
+                      ),
+                      SizedBox(height: 6.h),
+                      Text(
+                        '${item.durationDays} Days • ${item.groupType}',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.white,
+                          fontFamily: GoogleFonts.roboto().fontFamily,
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        children: [
+                          _buildAvatarStack(item.totalTravellers),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              '${item.totalTravellers} Travellers - ${item.travellerBreakdown}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppColors.white.withValues(alpha: 0.95),
+                                fontFamily: GoogleFonts.roboto().fontFamily,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 14.sp, color: const Color(0xFF9CA3AF)),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarStack(int count) {
+    const int showCount = 3;
+    final displayCount = count.clamp(1, showCount);
+    return SizedBox(
+      width: (28.w * displayCount) - (8.w * (displayCount - 1)),
+      height: 28.h,
+      child: Stack(
+        children: List.generate(displayCount, (i) {
+          return Positioned(
+            left: i * 20.0.w,
+            child: CircleAvatar(
+              radius: 14.r,
+              backgroundColor: AppColors.white,
+              child: CircleAvatar(
+                radius: 12.r,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.3),
+                child: Text(
+                  '${i + 1}',
+                  style: TextStyle(fontSize: 10.sp, color: AppColors.white, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

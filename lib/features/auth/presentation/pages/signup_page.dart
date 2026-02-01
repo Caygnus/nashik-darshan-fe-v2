@@ -132,7 +132,7 @@ class _SignupPageState extends State<SignupPage> {
         state.when(
           initial: () {},
           loading: () {},
-          authenticated: (_) => context.goNamed(AppRouteNames.home),
+          authenticated: (_) => context.goNamed(AppRouteNames.personalizeJourney),
           unauthenticated: () {},
           error: (String message) => Snackbar.showError(message),
         );
@@ -147,76 +147,88 @@ class _SignupPageState extends State<SignupPage> {
             isLoading: isLoading,
             message: isLoading ? 'Creating account...' : null,
             child: Scaffold(
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFFEEEEEE),
               body: SafeArea(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 24.w,
+                    horizontal: 20.w,
                     vertical: 16.h,
                   ),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        SizedBox(height: 12.h),
+                        // Header - centered
+                        Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                'Welcome to',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  color: AppColors.accent,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                'Nashik Darshan',
+                                style: TextStyle(
+                                  fontSize: 28.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.accent,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 6.h),
+                              Text(
+                                'Discover the beauty of Nashik',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: AppColors.grey,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
                         SizedBox(height: 20.h),
-                        // Header Section
-                        Text(
-                          'Welcome to',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            color: AppColors.accent,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'Nashik Darshan',
-                          style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.accent,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Discover the beauty of Nashik',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.darkText,
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
 
-                        // Scenic Image
+                        // Hero image - rounded card
                         ClipRRect(
                           borderRadius: BorderRadius.circular(16.r),
                           child: Image.asset(
                             'assets/images/home-hero.png',
                             width: double.infinity,
-                            height: 200.h,
+                            height: 180.h,
                             fit: BoxFit.cover,
                           ),
                         ),
-                        SizedBox(height: 24.h),
+                        SizedBox(height: 20.h),
 
-                        // Form Card
+                        // Sign-up form card - white, rounded, shadow
                         Container(
-                          padding: EdgeInsets.all(20.w),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24.w,
+                            vertical: 24.h,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(20.r),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Email Input
+                              // Email
                               Text(
                                 'Email Address',
                                 style: TextStyle(
@@ -235,16 +247,18 @@ class _SignupPageState extends State<SignupPage> {
                                     fontSize: 14.sp,
                                     color: AppColors.hintText,
                                   ),
+                                  filled: true,
+                                  fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -256,12 +270,12 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 16.w,
-                                    vertical: 16.h,
+                                    vertical: 14.h,
                                   ),
                                   suffixIcon: Icon(
-                                    Icons.email_outlined,
-                                    color: AppColors.grey,
-                                    size: 20.sp,
+                                    Icons.mail_outline,
+                                    color: AppColors.primary,
+                                    size: 22.sp,
                                   ),
                                 ),
                                 validator: (value) {
@@ -274,9 +288,9 @@ class _SignupPageState extends State<SignupPage> {
                                   return null;
                                 },
                               ),
-                              SizedBox(height: 20.h),
+                              SizedBox(height: 18.h),
 
-                              // Password Input
+                              // Password
                               Text(
                                 'Password',
                                 style: TextStyle(
@@ -295,16 +309,18 @@ class _SignupPageState extends State<SignupPage> {
                                     fontSize: 14.sp,
                                     color: AppColors.hintText,
                                   ),
+                                  filled: true,
+                                  fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -316,15 +332,15 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 16.w,
-                                    vertical: 16.h,
+                                    vertical: 14.h,
                                   ),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
                                           ? Icons.visibility_outlined
                                           : Icons.visibility_off_outlined,
-                                      color: AppColors.grey,
-                                      size: 20.sp,
+                                      color: AppColors.primary,
+                                      size: 22.sp,
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -345,81 +361,53 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                               SizedBox(height: 8.h),
 
-                              // Password Strength Indicator
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                          height: 4.h,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              2.r,
-                                            ),
-                                            color: AppColors.lightGrey,
-                                          ),
-                                          child: FractionallySizedBox(
-                                            alignment: Alignment.centerLeft,
-                                            widthFactor:
-                                                _getPasswordStrengthProgress(),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(2.r),
-                                                color:
-                                                    _getPasswordStrengthColor(),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                              // Password strength - 4 segments + label (Weak prominent)
+                              Row(
+                                children: List.generate(4, (index) {
+                                  final filled = (index + 1) / 4 <=
+                                      _getPasswordStrengthProgress();
+                                  return Expanded(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                        right: index < 3 ? 6.w : 0,
                                       ),
-                                      SizedBox(width: 8.w),
-                                      Container(
-                                        height: 4.h,
-                                        width: 40.w,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            2.r,
-                                          ),
-                                          color:
-                                              _getPasswordStrengthProgress() >
-                                                  0.33
-                                              ? _getPasswordStrengthColor()
-                                              : AppColors.lightGrey,
-                                        ),
+                                      height: 4.h,
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(2.r),
+                                        color: filled
+                                            ? _getPasswordStrengthColor()
+                                            : const Color(0xFFE0E0E0),
                                       ),
-                                      SizedBox(width: 8.w),
-                                      Container(
-                                        height: 4.h,
-                                        width: 40.w,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            2.r,
-                                          ),
-                                          color:
-                                              _getPasswordStrengthProgress() >
-                                                  0.66
-                                              ? _getPasswordStrengthColor()
-                                              : AppColors.lightGrey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    'Password strength: ${_getPasswordStrengthText()}',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: AppColors.hintText,
                                     ),
-                                  ),
-                                ],
+                                  );
+                                }),
                               ),
-                              SizedBox(height: 20.h),
+                              SizedBox(height: 6.h),
+                              RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: AppColors.darkText,
+                                  ),
+                                  children: [
+                                    const TextSpan(
+                                      text: 'Password strength: ',
+                                    ),
+                                    TextSpan(
+                                      text: _getPasswordStrengthText(),
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: _getPasswordStrengthColor(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 18.h),
 
-                              // Confirm Password Input
+                              // Confirm Password
                               Text(
                                 'Confirm Password',
                                 style: TextStyle(
@@ -438,16 +426,18 @@ class _SignupPageState extends State<SignupPage> {
                                     fontSize: 14.sp,
                                     color: AppColors.hintText,
                                   ),
+                                  filled: true,
+                                  fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -459,15 +449,15 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 16.w,
-                                    vertical: 16.h,
+                                    vertical: 14.h,
                                   ),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscureConfirmPassword
                                           ? Icons.visibility_outlined
                                           : Icons.visibility_off_outlined,
-                                      color: AppColors.grey,
-                                      size: 20.sp,
+                                      color: AppColors.primary,
+                                      size: 22.sp,
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -489,7 +479,7 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                               SizedBox(height: 24.h),
 
-                              // Proceed Button
+                              // Proceed - gradient orange, very rounded
                               SizedBox(
                                 width: double.infinity,
                                 height: 50.h,
@@ -497,11 +487,12 @@ class _SignupPageState extends State<SignupPage> {
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [
+                                        Color(0xFFFFB366),
                                         AppColors.primary,
-                                        Color(0xFFFFD700), // Yellow
+                                        Color(0xFFE67A3D),
                                       ],
                                     ),
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(14.r),
                                   ),
                                   child: ElevatedButton(
                                     onPressed: _handleSignUp,
@@ -509,9 +500,8 @@ class _SignupPageState extends State<SignupPage> {
                                       backgroundColor: Colors.transparent,
                                       shadowColor: Colors.transparent,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(14.r),
                                       ),
                                       elevation: 0,
                                     ),
@@ -529,19 +519,22 @@ class _SignupPageState extends State<SignupPage> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 24.h),
+                        SizedBox(height: 20.h),
 
-                        // Login/Social Section Card
+                        // Login / Social card - white, rounded
                         Container(
-                          padding: EdgeInsets.all(20.w),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24.w,
+                            vertical: 24.h,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(20.r),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
@@ -553,30 +546,58 @@ class _SignupPageState extends State<SignupPage> {
                                   fontSize: 14.sp,
                                   color: AppColors.darkText,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
-                              SizedBox(height: 4.h),
+                              SizedBox(height: 6.h),
                               TextButton(
                                 onPressed: () {
                                   context.pushNamed(AppRouteNames.login);
                                 },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
                                 child: Text(
                                   'Sign In Here',
                                   style: TextStyle(
                                     fontSize: 14.sp,
                                     color: AppColors.accent,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 16.h),
-                              Text(
-                                'Or continue with',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.darkText,
-                                ),
+                              SizedBox(height: 18.h),
+                              // Or continue with - separator
+                              Row(
+                                children: [
+                                  const Expanded(
+                                    child: Divider(
+                                      color: Color(0xFFE0E0E0),
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14.w,
+                                    ),
+                                    child: Text(
+                                      'Or continue with',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: AppColors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                  const Expanded(
+                                    child: Divider(
+                                      color: Color(0xFFE0E0E0),
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 16.h),
+                              SizedBox(height: 18.h),
                               SizedBox(
                                 width: double.infinity,
                                 height: 50.h,
@@ -584,7 +605,7 @@ class _SignupPageState extends State<SignupPage> {
                                   onPressed: _handleGoogleSignIn,
                                   style: OutlinedButton.styleFrom(
                                     side: const BorderSide(
-                                      color: AppColors.lightGrey,
+                                      color: Color(0xFFE0E0E0),
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12.r),
@@ -604,8 +625,8 @@ class _SignupPageState extends State<SignupPage> {
                                       SizedBox(width: 8.w),
                                       Image.asset(
                                         'assets/icons/google.png',
-                                        width: 20.w,
-                                        height: 20.w,
+                                        width: 22.w,
+                                        height: 22.w,
                                       ),
                                     ],
                                   ),
@@ -616,35 +637,56 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         SizedBox(height: 24.h),
 
-                        // Footer
+                        // Footer - Terms and Privacy (accent links)
                         Center(
-                          child: RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: AppColors.hintText,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppColors.darkText,
+                                ),
+                                children: [
+                                  const TextSpan(
+                                    text: 'By signing up, you agree to our ',
+                                  ),
+                                  WidgetSpan(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // TODO: Navigate to Terms of Service
+                                      },
+                                      child: Text(
+                                        'Terms of Service',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: AppColors.accent,
+                                          fontWeight: FontWeight.w500,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const TextSpan(text: ' and '),
+                                  WidgetSpan(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // TODO: Navigate to Privacy Policy
+                                      },
+                                      child: Text(
+                                        'Privacy Policy',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: AppColors.accent,
+                                          fontWeight: FontWeight.w500,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              children: [
-                                const TextSpan(
-                                  text: 'By signing up, you agree to our ',
-                                ),
-                                TextSpan(
-                                  text: 'Terms of Service',
-                                  style: TextStyle(
-                                    color: AppColors.accent,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const TextSpan(text: ' and '),
-                                TextSpan(
-                                  text: 'Privacy Policy',
-                                  style: TextStyle(
-                                    color: AppColors.accent,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),

@@ -19,44 +19,47 @@ class _IternaryPageState extends State<IternaryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(56.h),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          PreferredSize(
+            preferredSize: Size.fromHeight(56.h),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF111827)),
-              onPressed: () => context.pop(),
-            ),
-            title: Text(
-              'Itineraries',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600, // Semibold
-                color: const Color(0xFF111827),
-                height: 28 / 18, // Line height 28
-                fontFamily: 'Roboto',
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF111827)),
+                  onPressed: () => context.pop(),
+                ),
+                title: Text(
+                  'Itineraries',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF111827),
+                    height: 28 / 18,
+                    fontFamily: 'Roboto',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                centerTitle: true,
               ),
-              textAlign: TextAlign.center,
             ),
-            centerTitle: true,
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
+          Expanded(
+            child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,6 +93,9 @@ class _IternaryPageState extends State<IternaryPage> {
             SizedBox(height: 80.h), // Bottom padding
           ],
         ),
+            ),
+          ),
+        ],
       ),
     );
   }

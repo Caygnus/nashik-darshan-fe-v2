@@ -11,6 +11,7 @@ class AppRouteNames {
   static const String splash = 'splash';
   static const String login = 'login';
   static const String signup = 'signup';
+  static const String personalizeJourney = 'personalize-journey';
   static const String oauthCallback = 'oauth-callback';
 
   // ==================== Main Tab Routes ====================
@@ -19,6 +20,7 @@ class AppRouteNames {
   static const String home = 'home';
   static const String events = 'events';
   static const String profile = 'profile';
+  static const String editProfile = 'edit-profile';
 
   // ==================== Feature Routes ====================
   static const String myItineraries = 'my-itineraries';
@@ -29,7 +31,13 @@ class AppRouteNames {
   static const String eatery = 'eatery';
   static const String templeDarshan = 'temple-darshan';
   static const String aartiTiming = 'aarti-timing';
-  
+
+  // ==================== Wishlist ====================
+  static const String wishlist = 'wishlist';
+
+  // ==================== Spiritual Stories ====================
+  static const String savedSpiritualStories = 'saved-spiritual-stories';
+
   // ==================== Places Routes ====================
   static const String categoryDetail = 'category-detail';
   static const String placeDetail = 'place-detail';
@@ -39,6 +47,7 @@ class AppRouteNames {
   static const String addStops = 'add-stops';
   static const String customizeTrip = 'customize-trip';
   static const String savedItinerary = 'saved-itinerary';
+  static const String savedItinerariesList = 'saved-itineraries-list';
 
   // ==================== Events Routes ====================
   static const String eventDetail = 'event-detail';

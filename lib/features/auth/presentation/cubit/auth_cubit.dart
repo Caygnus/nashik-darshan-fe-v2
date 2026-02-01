@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nashik/core/auth/google_auth_service.dart';
+import 'package:nashik/core/auth/unauthorized_notifier.dart';
+import 'package:nashik/core/storage/secure_token_storage.dart';
 import 'package:nashik/core/supabase/config.dart';
 import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
 import 'package:nashik/features/auth/domain/use_cases/signin_with_email.dart';
@@ -8,54 +10,39 @@ import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 class AuthCubit extends Cubit<AuthState> {
-  final SignupWithEmail signupWithEmail;
-  final SigninWithEmail signinWithEmail;
-  final GetCurrentUser getCurrentUser;
-
   AuthCubit({
-    required this.signupWithEmail,
-    required this.signinWithEmail,
-    required this.getCurrentUser,
-  }) : super(const AuthState.initial()) {
+    required SignupWithEmail signupWithEmail,
+    required SigninWithEmail signinWithEmail,
+    required GetCurrentUser getCurrentUser,
+    required SecureTokenStorage tokenStorage,
+    required UnauthorizedNotifier unauthorizedNotifier,
+  })  : _signupWithEmail = signupWithEmail,
+        _signinWithEmail = signinWithEmail,
+        _getCurrentUser = getCurrentUser,
+        _tokenStorage = tokenStorage,
+        super(const AuthState.initial()) {
+    unauthorizedNotifier.setCallback(signOut);
     _initializeAuthState();
   }
 
-  void _initializeAuthState() {
-    // TODO: Uncomment when Supabase is initialized
-    // SupabaseConfig.client.auth.onAuthStateChange.listen((data) {
-    //   final AuthChangeEvent event = data.event;
-    //   final Session? session = data.session;
+  final SignupWithEmail _signupWithEmail;
+  final SigninWithEmail _signinWithEmail;
+  final GetCurrentUser _getCurrentUser;
+  final SecureTokenStorage _tokenStorage;
 
-    //   if (event == AuthChangeEvent.signedIn && session != null) {
-    //     try {
-    //       final currentLocation = AppRouter.router.location;
-    //       if (!currentLocation.contains(OAuthCallbackPage.routePath)) {
-    //         _loadCurrentUser();
-    //       }
-    //     } catch (e) {
-    //     _loadCurrentUser();
-    //     }
-    //   } else if (event == AuthChangeEvent.signedOut) {
-    //     emit(const AuthState.unauthenticated());
-    //   }
-    // });
-
-    // TODO: Uncomment when Supabase is initialized
-    // final user = SupabaseConfig.client.auth.currentUser;
-    // if (user != null) {
-    //   _loadCurrentUser();
-    // } else {
-    //   emit(const AuthState.unauthenticated());
-    // }
-    
-    // Temporary: Set unauthenticated state when Supabase is not initialized
+  void _initializeAuthState() async {
+    final token = await _tokenStorage.getAccessToken();
+    if (token != null && token.isNotEmpty) {
+      await _loadCurrentUser();
+      return;
+    }
     emit(const AuthState.unauthenticated());
   }
 
   Future<void> _loadCurrentUser() async {
-    final result = await getCurrentUser();
+    final result = await _getCurrentUser();
     result.fold(
-      (failure) => emit(AuthState.error(failure.message)),
+      (failure) => emit(const AuthState.unauthenticated()),
       (user) => emit(AuthState.authenticated(user)),
     );
   }
@@ -79,7 +66,7 @@ class AuthCubit extends Cubit<AuthState> {
       phone: phone,
     );
 
-    final result = await signupWithEmail(params);
+    final result = await _signupWithEmail(params);
 
     result.fold(
       (failure) => emit(AuthState.error(failure.message)),
@@ -95,7 +82,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     final params = SigninWithEmailParams(email: email, password: password);
 
-    final result = await signinWithEmail(params);
+    final result = await _signinWithEmail(params);
 
     result.fold(
       (failure) => emit(AuthState.error(failure.message)),
@@ -114,10 +101,12 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> signOut() async {
     try {
+      await _tokenStorage.deleteAccessToken();
       await GoogleAuthService().signOut();
       emit(const AuthState.unauthenticated());
     } catch (e) {
-      emit(AuthState.error('Failed to sign out: ${e.toString()}'));
+      await _tokenStorage.deleteAccessToken();
+      emit(const AuthState.unauthenticated());
     }
   }
 

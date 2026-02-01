@@ -7,6 +7,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nashik/android_app.dart';
 import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/app_router.dart';
+import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
+import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:nashik/ios_app.dart';
 
@@ -49,9 +51,11 @@ class MyApp extends StatelessWidget {
       designSize: const Size(360, 920),
       child: MultiBlocProvider(
         providers: [
-          // TODO: Uncomment when Supabase is initialized
-          // BlocProvider(create: (context) => locator<AuthCubit>()),
-          BlocProvider(create: (context) => ProfileCubit()),
+          BlocProvider(create: (context) => locator<AuthCubit>()),
+          BlocProvider(
+            create: (context) =>
+                ProfileCubit(getCurrentUser: locator<GetCurrentUser>()),
+          ),
         ],
         child: Platform.isIOS ? const IosApp() : const AndroidApp(),
       ),

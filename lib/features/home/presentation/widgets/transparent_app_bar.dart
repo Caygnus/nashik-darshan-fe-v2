@@ -64,96 +64,68 @@ class TransparentAppBarWidget extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Status bar area with blur
-                  Container(
-                    height: MediaQuery.of(context).padding.top,
-                    color: Colors.transparent,
-                  ),
-                  // App bar content
-                  SafeArea(
-                    bottom: false, // Don't add bottom padding, we'll handle it
-                    child: Container(
-                      height: kToolbarHeight + 10.h, // Reduced height
-                      child: AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        toolbarHeight: kToolbarHeight + 10.h, // Reduced height
-                        systemOverlayStyle: SystemUiOverlayStyle(
-                          statusBarColor: Colors.transparent,
-                          statusBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
-                          statusBarBrightness: isScrolling ? Brightness.light : Brightness.dark,
-                          systemNavigationBarColor: isScrolling 
-                              ? const Color(0x4DFFFFFF) 
-                              : Colors.transparent,
-                          systemNavigationBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
-                        ),
-                        leading: Padding(
-                          padding: EdgeInsets.only(left: 16.w),
+                  // Status bar inset only
+                  SizedBox(height: MediaQuery.of(context).padding.top),
+                  // Compact app bar row: top-aligned, reduced height
+                  SizedBox(
+                    height: 48.h,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Leading: location icon + Hi user + location text (top-aligned)
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.w, top: 6.h),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center, // Vertically center
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Location Icon Column - vertically centered
+                              SvgPicture.asset(
+                                'assets/svg/location.svg',
+                                width: 11.w,
+                                height: 11.h,
+                                colorFilter: ColorFilter.mode(
+                                  iconColor,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
                               Column(
-                                mainAxisAlignment: MainAxisAlignment.center, // Vertically center
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  // Top row: Icon and "Hi" text side by side
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Location Icon
-                                      SvgPicture.asset(
-                                        'assets/svg/location.svg',
-                                        width: 11.w,
-                                        height: 11.h,
-                                        colorFilter: ColorFilter.mode(
-                                          iconColor,
-                                          BlendMode.srcIn,
+                                  Builder(
+                                    builder: (context) {
+                                      String userName = 'Ram Lokhande';
+                                      try {
+                                        final authCubit = context.read<AuthCubit>();
+                                        final state = authCubit.state;
+                                        userName = state.maybeWhen(
+                                          authenticated: (user) => user.name,
+                                          orElse: () => 'Ram Lokhande',
+                                        );
+                                      } catch (e) {
+                                        userName = 'Ram Lokhande';
+                                      }
+                                      return Text(
+                                        'Hi, $userName',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 13.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: textColor,
+                                          height: 1.2,
                                         ),
-                                      ),
-                                      SizedBox(width: 3.w), // Small space between icon and text
-                                      // User Greeting
-                                      Builder(
-                                        builder: (context) {
-                                          String userName = 'Ram Lokhande'; // Default name
-                                          try {
-                                            final authCubit = context.read<AuthCubit>();
-                                            final state = authCubit.state;
-                                            userName = state.maybeWhen(
-                                              authenticated: (user) => user.name,
-                                              orElse: () => 'Ram Lokhande',
-                                            );
-                                          } catch (e) {
-                                            // AuthCubit not available, use default
-                                            userName = 'Ram Lokhande';
-                                          }
-                                          return Text(
-                                            'Hi, $userName',
-                                            style: GoogleFonts.montserrat(
-                                              fontSize: 14.sp,
-                                              fontWeight: FontWeight.w600, // SemiBold
-                                              color: textColor,
-                                              height: 32 / 11, // Line height 32px for 11px font size
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
+                                      );
+                                    },
                                   ),
-                                  // Location Text directly below (no spacing)
-                                  Transform.translate(
-                                    offset: Offset(0, -8.h), // Negative offset to bring text closer, compensating for line height
-                                    child: Text(
-                                      'Satpur, Nashik',
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w300, // Light
-                                        color: textColor, // Change to textColor instead of fixed black
-                                        height: 1.0, // Tight line height
-                                      ),
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    'Satpur, Nashik',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w300,
+                                      color: textColor,
+                                      height: 1.0,
                                     ),
                                   ),
                                 ],
@@ -161,18 +133,18 @@ class TransparentAppBarWidget extends StatelessWidget {
                             ],
                           ),
                         ),
-                        leadingWidth: 200.w,
-                        title: const SizedBox.shrink(),
-                        actions: [
-                          IconButton(
-                            icon: Icon(Icons.notifications_outlined, color: iconColor),
-                            onPressed: () {
-                              // Handle bell icon press
-                            },
+                        const Spacer(),
+                        // Bell icon top-aligned
+                        Padding(
+                          padding: EdgeInsets.only(top: 4.h, right: 8.w),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(minWidth: 40.w, minHeight: 40.h),
+                            icon: Icon(Icons.notifications_outlined, size: 24.sp, color: iconColor),
+                            onPressed: () {},
                           ),
-                          SizedBox(width: 8.w),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

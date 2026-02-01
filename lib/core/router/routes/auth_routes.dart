@@ -4,6 +4,7 @@ import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/router/route_paths.dart';
 import 'package:nashik/features/auth/presentation/pages/login_page.dart';
 import 'package:nashik/features/auth/presentation/pages/oauth_callback_page.dart';
+import 'package:nashik/features/auth/presentation/pages/personalize_journey_page.dart';
 import 'package:nashik/features/auth/presentation/pages/signup_page.dart';
 import 'package:nashik/features/auth/presentation/pages/splash_screen.dart';
 
@@ -35,6 +36,14 @@ class AuthRoutes {
         name: AppRouteNames.signup,
         pageBuilder: (context, state) => AppRouter.getPage(
           child: const SignupPage(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.personalizeJourney,
+        name: AppRouteNames.personalizeJourney,
+        pageBuilder: (context, state) => AppRouter.getPage(
+          child: const PersonalizeJourneyPage(),
           state: state,
         ),
       ),
