@@ -73,11 +73,11 @@ class TransparentAppBarWidget extends StatelessWidget {
                   SafeArea(
                     bottom: false, // Don't add bottom padding, we'll handle it
                     child: Container(
-                      height: kToolbarHeight + 20.h,
+                      height: kToolbarHeight + 10.h, // Reduced height
                       child: AppBar(
                         backgroundColor: Colors.transparent,
                         elevation: 0,
-                        toolbarHeight: kToolbarHeight + 20.h,
+                        toolbarHeight: kToolbarHeight + 10.h, // Reduced height
                         systemOverlayStyle: SystemUiOverlayStyle(
                           statusBarColor: Colors.transparent,
                           statusBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
@@ -133,7 +133,7 @@ class TransparentAppBarWidget extends StatelessWidget {
                                           return Text(
                                             'Hi, $userName',
                                             style: GoogleFonts.montserrat(
-                                              fontSize: 11.sp,
+                                              fontSize: 14.sp,
                                               fontWeight: FontWeight.w600, // SemiBold
                                               color: textColor,
                                               height: 32 / 11, // Line height 32px for 11px font size
@@ -149,7 +149,7 @@ class TransparentAppBarWidget extends StatelessWidget {
                                     child: Text(
                                       'Satpur, Nashik',
                                       style: GoogleFonts.montserrat(
-                                        fontSize: 9.sp,
+                                        fontSize: 12.sp,
                                         fontWeight: FontWeight.w300, // Light
                                         color: textColor, // Change to textColor instead of fixed black
                                         height: 1.0, // Tight line height

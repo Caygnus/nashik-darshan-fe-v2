@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nashik/features/home/presentation/widgets/discover_nashik_card.dart';
 // TODO: Uncomment when Quick Access section is enabled
 // import 'package:go_router/go_router.dart';
 // import 'package:nashik/features/eatery/presentation/pages/eatery_screen.dart';
@@ -71,6 +72,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   offset: Offset(0, -10.h),
                   child: const SpiritualStoryCard(),
                 ),
+                SizedBox(height: 16.h),
+                // Discover Nashik card (352x130, gradient, CTA)
+                const DiscoverNashikCard(),
+                SizedBox(height: 16.h),
                 // TODO: Uncomment when needed
                 // Quick Access Section
                 // QuickAccessSection(

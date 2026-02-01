@@ -129,6 +129,21 @@ class AppNavigator {
     return pushNamed(context, AppRouteNames.eatery);
   }
 
+  // ==================== Events Navigation ====================
+
+  static Future<void> pushToEventDetail(
+    BuildContext context, {
+    required String eventId,
+    String? eventTitle,
+  }) {
+    return pushNamed(
+      context,
+      AppRouteNames.eventDetail,
+      pathParameters: {'eventId': eventId},
+      queryParameters: eventTitle != null ? {'title': eventTitle} : null,
+    );
+  }
+
   // ==================== Utility Navigation ====================
 
   static void goToDeepLinkTest(BuildContext context) {

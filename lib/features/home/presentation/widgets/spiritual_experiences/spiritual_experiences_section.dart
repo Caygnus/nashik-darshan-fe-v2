@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nashik/core/router/route_names.dart';
 
 import 'spiritual_experience_card.dart';
 
@@ -31,35 +33,42 @@ class SpiritualExperiencesSection extends StatelessWidget {
           // 2x2 Grid
           Row(
             children: [
-              const SpiritualExperienceCard(
+              SpiritualExperienceCard(
                 iconPath: 'assets/svg/om.svg',
                 title: 'Temple Darshan',
                 subtitle: 'Live slots available',
+                onTap: () {
+                  context.pushNamed(AppRouteNames.templeDarshan);
+                },
               ),
               SizedBox(width: 12.w),
-              const SpiritualExperienceCard(
+              SpiritualExperienceCard(
                 iconPath: 'assets/svg/arti.svg',
                 title: 'Aarti Timing',
                 subtitle: 'Next timing',
+                onTap: () {
+                  context.pushNamed(AppRouteNames.aartiTiming);
+                },
               ),
             ],
           ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              const SpiritualExperienceCard(
-                iconPath: 'assets/svg/person.svg',
-                title: 'Spiritual Guide',
-                subtitle: 'Local experts',
-              ),
-              SizedBox(width: 12.w),
-              const SpiritualExperienceCard(
-                iconPath: 'assets/svg/puja.svg',
-                title: 'Puja Rituals',
-                subtitle: 'Book now',
-              ),
-            ],
-          ),
+          // TODO: Uncomment when needed
+          // SizedBox(height: 12.h),
+          // Row(
+          //   children: [
+          //     const SpiritualExperienceCard(
+          //       iconPath: 'assets/svg/person.svg',
+          //       title: 'Spiritual Guide',
+          //       subtitle: 'Local experts',
+          //     ),
+          //     SizedBox(width: 12.w),
+          //     const SpiritualExperienceCard(
+          //       iconPath: 'assets/svg/puja.svg',
+          //       title: 'Puja Rituals',
+          //       subtitle: 'Book now',
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
