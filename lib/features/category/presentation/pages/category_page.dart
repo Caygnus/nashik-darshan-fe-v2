@@ -4,7 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/router/route_names.dart';
 
-import '../../../places/data/repositories/place_repository_impl.dart';
 import '../../../places/domain/entities/category.dart';
 import '../../../places/domain/repositories/place_repository.dart';
 import '../../../places/presentation/widgets/event_card.dart';
@@ -45,24 +44,27 @@ TextStyle _getMontserratStyle({
 }
 
 /// Category Page
-/// Main page showing all categories, accessible from bottom navigation bar
+/// Main page showing all categories, accessible from bottom navigation bar.
+/// [placeRepository] is injected via DI (presentation depends on domain only).
 class CategoryPage extends StatefulWidget {
-  const CategoryPage({super.key});
+  const CategoryPage({super.key, required this.placeRepository});
+
+  final PlaceRepository placeRepository;
 
   @override
   State<CategoryPage> createState() => _CategoryPageState();
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  late final PlaceRepository _repository;
   List<Category> _categories = [];
   bool _isLoading = true;
   final Set<String> _favoriteCategories = {}; // Track favorite categories
 
+  PlaceRepository get _repository => widget.placeRepository;
+
   @override
   void initState() {
     super.initState();
-    _repository = PlaceRepositoryImpl(); // TODO: Inject via DI
     _loadCategories();
   }
 

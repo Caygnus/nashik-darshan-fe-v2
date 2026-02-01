@@ -2,6 +2,9 @@ import 'package:nashik/core/error/exceptions/server_exception.dart';
 import 'package:nashik/core/supabase/config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// OAuth redirect URL for Google sign-in callback
+const String authOAuthRedirectUrl = 'com.caygnus.nashikdarshan://login-callback/';
+
 /// Data source for Supabase authentication operations
 /// This handles the Supabase-specific authentication logic
 abstract class AuthSupabaseDataSource {
@@ -23,6 +26,24 @@ abstract class AuthSupabaseDataSource {
 
   /// Get current Supabase session access token
   String? getCurrentAccessToken();
+
+  /// Initiate Google sign-in via Supabase OAuth. Returns true if flow started.
+  Future<bool> signInWithGoogle();
+
+  /// Sign out from Supabase (and any OAuth provider).
+  Future<void> signOut();
+
+  /// Send password reset email. [redirectTo] is the deep link for reset callback.
+  Future<void> resetPasswordForEmail(String email, String redirectTo);
+
+  /// Verify OTP (e.g. email verification). Returns the session access token.
+  Future<String> verifyOTP(String token, String email);
+
+  /// Create session from OAuth callback URL. Returns the access token.
+  Future<String> getSessionFromUrl(Uri uri);
+
+  /// Metadata of current Supabase user (email, full_name, name, display_name, phone). Null if no session.
+  Future<Map<String, dynamic>?> getCurrentUserMetadata();
 }
 
 class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
@@ -103,5 +124,110 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
     } catch (e) {
       return null;
     }
+  }
+
+  @override
+  Future<bool> signInWithGoogle() async {
+    try {
+      await SupabaseConfig.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: authOAuthRedirectUrl,
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+      return true;
+    } catch (e) {
+      throw ServerException(
+        message:
+            'Failed to initiate Google Sign-In: $e\n'
+            'Please ensure Google provider is enabled and redirect URL is configured: $authOAuthRedirectUrl',
+        code: 'OAUTH_ERROR',
+      );
+    }
+  }
+
+  @override
+  Future<void> signOut() async {
+    try {
+      await SupabaseConfig.client.auth.signOut();
+    } catch (_) {
+      // Ignore errors during sign out
+    }
+  }
+
+  @override
+  Future<void> resetPasswordForEmail(String email, String redirectTo) async {
+    try {
+      await SupabaseConfig.client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: redirectTo,
+      );
+    } on AuthException catch (e) {
+      throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
+    } catch (e) {
+      throw ServerException(
+        message: 'Failed to send password reset: ${e.toString()}',
+        code: 'UNEXPECTED_ERROR',
+      );
+    }
+  }
+
+  @override
+  Future<String> verifyOTP(String token, String email) async {
+    try {
+      final response = await SupabaseConfig.client.auth.verifyOTP(
+        type: OtpType.email,
+        token: token,
+        email: email,
+      );
+      if (response.session == null) {
+        throw ServerException(
+          message: 'Email verification did not return a session',
+          code: 'VERIFY_OTP_FAILED',
+        );
+      }
+      return response.session!.accessToken;
+    } on AuthException catch (e) {
+      throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
+    } catch (e) {
+      throw ServerException(
+        message: 'Failed to verify email: ${e.toString()}',
+        code: 'UNEXPECTED_ERROR',
+      );
+    }
+  }
+
+  @override
+  Future<String> getSessionFromUrl(Uri uri) async {
+    try {
+      await SupabaseConfig.client.auth.getSessionFromUrl(uri);
+      final session = SupabaseConfig.client.auth.currentSession;
+      if (session == null || session.accessToken.isEmpty) {
+        throw ServerException(
+          message: 'Failed to create or retrieve session from OAuth callback',
+          code: 'OAUTH_CALLBACK_FAILED',
+        );
+      }
+      return session.accessToken;
+    } on AuthException catch (e) {
+      throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
+    } catch (e) {
+      throw ServerException(
+        message: 'OAuth callback failed: ${e.toString()}',
+        code: 'OAUTH_CALLBACK_FAILED',
+      );
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCurrentUserMetadata() async {
+    final user = SupabaseConfig.client.auth.currentUser;
+    if (user == null) return null;
+    return {
+      'email': user.email,
+      'full_name': user.userMetadata?['full_name'],
+      'name': user.userMetadata?['name'],
+      'display_name': user.userMetadata?['display_name'],
+      'phone': user.phone,
+    };
   }
 }

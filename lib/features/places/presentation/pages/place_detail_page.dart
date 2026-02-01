@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../places/data/repositories/place_repository_impl.dart';
 import '../../domain/entities/place.dart';
 import '../../domain/repositories/place_repository.dart';
 import '../../domain/use_cases/get_place_details.dart';
@@ -15,29 +14,30 @@ import '../templates/shopping_place_detail_template.dart';
 import '../templates/spiritual_place_detail_template.dart';
 
 /// Place Detail Page
-/// Shows detailed information about a place
-/// Uses different templates based on category
+/// Shows detailed information about a place.
+/// [placeRepository] is injected via DI (presentation depends on domain only).
 class PlaceDetailPage extends StatefulWidget {
-  final String placeId;
-
   const PlaceDetailPage({
     super.key,
     required this.placeId,
+    required this.placeRepository,
   });
+
+  final String placeId;
+  final PlaceRepository placeRepository;
 
   @override
   State<PlaceDetailPage> createState() => _PlaceDetailPageState();
 }
 
 class _PlaceDetailPageState extends State<PlaceDetailPage> {
-  late final PlaceRepository _repository;
+  PlaceRepository get _repository => widget.placeRepository;
   Place? _place;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _repository = PlaceRepositoryImpl(); // TODO: Inject via DI
     _loadPlace();
   }
 

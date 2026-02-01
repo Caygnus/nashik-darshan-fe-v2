@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/app_router.dart';
 import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/router/route_paths.dart';
@@ -8,13 +9,14 @@ import 'package:nashik/features/events/presentation/pages/event_detail_page.dart
 import 'package:nashik/features/events/presentation/pages/saved_events_page.dart';
 import 'package:nashik/features/events/presentation/pages/upcoming_events_page.dart';
 import 'package:nashik/features/hotels/presentation/pages/hotels_screen.dart';
-import 'package:nashik/features/iternary/presentation/models/saved_itinerary_data.dart';
+import 'package:nashik/features/iternary/domain/entities/saved_itinerary.dart';
 import 'package:nashik/features/iternary/presentation/pages/add_stops_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/customize_trip_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/itinerary_detail_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/my_itineraries_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/saved_itineraries_page.dart';
 import 'package:nashik/features/iternary/presentation/pages/saved_itinerary_page.dart';
+import 'package:nashik/features/places/domain/repositories/place_repository.dart';
 import 'package:nashik/features/places/presentation/pages/category_detail_page.dart';
 import 'package:nashik/features/places/presentation/pages/place_detail_page.dart';
 import 'package:nashik/features/spiritual/presentation/pages/aarti_timing_page.dart';
@@ -171,7 +173,10 @@ class FeatureRoutes {
         pageBuilder: (context, state) {
           final categoryId = state.pathParameters['categoryId'] ?? '';
           return AppRouter.getPage(
-            child: CategoryDetailPage(categoryId: categoryId),
+            child: CategoryDetailPage(
+              categoryId: categoryId,
+              placeRepository: locator<PlaceRepository>(),
+            ),
             state: state,
           );
         },
@@ -182,7 +187,10 @@ class FeatureRoutes {
         pageBuilder: (context, state) {
           final placeId = state.pathParameters['placeId'] ?? '';
           return AppRouter.getPage(
-            child: PlaceDetailPage(placeId: placeId),
+            child: PlaceDetailPage(
+              placeId: placeId,
+              placeRepository: locator<PlaceRepository>(),
+            ),
             state: state,
           );
         },

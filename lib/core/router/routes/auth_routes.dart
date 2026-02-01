@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/app_router.dart';
 import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/router/route_paths.dart';
+import 'package:nashik/features/auth/domain/use_cases/complete_oauth_callback.dart';
 import 'package:nashik/features/auth/presentation/pages/login_page.dart';
 import 'package:nashik/features/auth/presentation/pages/oauth_callback_page.dart';
 import 'package:nashik/features/auth/presentation/pages/personalize_journey_page.dart';
@@ -51,7 +53,9 @@ class AuthRoutes {
         path: AppRoutePaths.oauthCallback,
         name: AppRouteNames.oauthCallback,
         pageBuilder: (context, state) => AppRouter.getPage(
-          child: const OAuthCallbackPage(),
+          child: OAuthCallbackPage(
+            completeOAuthCallback: locator<CompleteOAuthCallback>(),
+          ),
           state: state,
         ),
       ),

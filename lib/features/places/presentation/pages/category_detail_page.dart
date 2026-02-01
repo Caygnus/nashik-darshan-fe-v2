@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../places/data/repositories/place_repository_impl.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/place.dart';
 import '../../domain/repositories/place_repository.dart';
@@ -26,21 +25,24 @@ TextStyle _getTextStyle({
 }
 
 /// Category Detail Page
-/// Shows comprehensive category information with tabs and sections
+/// Shows comprehensive category information with tabs and sections.
+/// [placeRepository] is injected via DI (presentation depends on domain only).
 class CategoryDetailPage extends StatefulWidget {
-  final String categoryId;
-
   const CategoryDetailPage({
     super.key,
     required this.categoryId,
+    required this.placeRepository,
   });
+
+  final String categoryId;
+  final PlaceRepository placeRepository;
 
   @override
   State<CategoryDetailPage> createState() => _CategoryDetailPageState();
 }
 
 class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTickerProviderStateMixin {
-  late final PlaceRepository _repository;
+  PlaceRepository get _repository => widget.placeRepository;
   Category? _category;
   List<Place> _places = [];
   bool _isLoading = true;
@@ -80,7 +82,6 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
   @override
   void initState() {
     super.initState();
-    _repository = PlaceRepositoryImpl();
     _mainScrollController.addListener(_onScroll);
     _loadData();
   }

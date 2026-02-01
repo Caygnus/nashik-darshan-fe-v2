@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:nashik/core/router/route_names.dart';
 
-import '../models/saved_itinerary_data.dart';
+import '../../domain/entities/saved_itinerary.dart';
 
 /// Customize Trip Page
 /// Multi-step flow: Trip Overview → Trip Basics → Travel Preferences → Plan Your Days → Final Preview.

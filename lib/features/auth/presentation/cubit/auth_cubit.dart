@@ -1,42 +1,57 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nashik/core/auth/google_auth_service.dart';
 import 'package:nashik/core/auth/unauthorized_notifier.dart';
-import 'package:nashik/core/storage/secure_token_storage.dart';
-import 'package:nashik/core/supabase/config.dart';
+import 'package:nashik/features/auth/domain/params/signin_with_email_params.dart';
+import 'package:nashik/features/auth/domain/params/signup_with_email_params.dart';
+import 'package:nashik/features/auth/domain/params/verify_email_params.dart';
 import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
+import 'package:nashik/features/auth/domain/use_cases/reset_password.dart';
+import 'package:nashik/features/auth/domain/use_cases/sign_in_with_google.dart';
+import 'package:nashik/features/auth/domain/use_cases/sign_out.dart';
 import 'package:nashik/features/auth/domain/use_cases/signin_with_email.dart';
 import 'package:nashik/features/auth/domain/use_cases/signup_with_email.dart';
+import 'package:nashik/features/auth/domain/use_cases/verify_email.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({
     required SignupWithEmail signupWithEmail,
     required SigninWithEmail signinWithEmail,
     required GetCurrentUser getCurrentUser,
-    required SecureTokenStorage tokenStorage,
+    required SignOut signOut,
+    required SignInWithGoogle signInWithGoogle,
+    required ResetPassword resetPassword,
+    required VerifyEmail verifyEmail,
     required UnauthorizedNotifier unauthorizedNotifier,
   })  : _signupWithEmail = signupWithEmail,
         _signinWithEmail = signinWithEmail,
         _getCurrentUser = getCurrentUser,
-        _tokenStorage = tokenStorage,
+        _signOut = signOut,
+        _signInWithGoogle = signInWithGoogle,
+        _resetPassword = resetPassword,
+        _verifyEmail = verifyEmail,
         super(const AuthState.initial()) {
-    unauthorizedNotifier.setCallback(signOut);
+    unauthorizedNotifier.setCallback(this.signOut);
     _initializeAuthState();
   }
 
   final SignupWithEmail _signupWithEmail;
   final SigninWithEmail _signinWithEmail;
   final GetCurrentUser _getCurrentUser;
-  final SecureTokenStorage _tokenStorage;
+  final SignOut _signOut;
+  final SignInWithGoogle _signInWithGoogle;
+  final ResetPassword _resetPassword;
+  final VerifyEmail _verifyEmail;
 
   void _initializeAuthState() async {
-    final token = await _tokenStorage.getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      await _loadCurrentUser();
-      return;
-    }
-    emit(const AuthState.unauthenticated());
+    final result = await _getCurrentUser();
+    result.fold(
+      (_) => emit(const AuthState.unauthenticated()),
+      (user) => emit(AuthState.authenticated(user)),
+    );
+  }
+
+  void loadCurrentUser() {
+    _loadCurrentUser();
   }
 
   Future<void> _loadCurrentUser() async {
@@ -45,10 +60,6 @@ class AuthCubit extends Cubit<AuthState> {
       (failure) => emit(const AuthState.unauthenticated()),
       (user) => emit(AuthState.authenticated(user)),
     );
-  }
-
-  void loadCurrentUser() {
-    _loadCurrentUser();
   }
 
   Future<void> signUpWithEmail({
@@ -91,56 +102,37 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signInWithGoogle() async {
-    try {
-      emit(const AuthState.loading());
-      await GoogleAuthService().signInWithGoogle();
-    } catch (e) {
-      emit(AuthState.error('Failed to sign in with Google: ${e.toString()}'));
-    }
+    emit(const AuthState.loading());
+    final result = await _signInWithGoogle();
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.loading()),
+    );
   }
 
   Future<void> signOut() async {
-    try {
-      await _tokenStorage.deleteAccessToken();
-      await GoogleAuthService().signOut();
-      emit(const AuthState.unauthenticated());
-    } catch (e) {
-      await _tokenStorage.deleteAccessToken();
-      emit(const AuthState.unauthenticated());
-    }
+    final result = await _signOut();
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.unauthenticated()),
+    );
   }
 
   Future<void> resetPassword(String email) async {
-    try {
-      emit(const AuthState.loading());
-      await SupabaseConfig.client.auth.resetPasswordForEmail(
-        email,
-        redirectTo: 'com.caygnus.nashikdarshan://reset-password/',
-      );
-      emit(const AuthState.unauthenticated());
-    } catch (e) {
-      emit(
-        AuthState.error('Failed to send password reset email: ${e.toString()}'),
-      );
-    }
+    emit(const AuthState.loading());
+    final result = await _resetPassword(email);
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.unauthenticated()),
+    );
   }
 
   Future<void> verifyEmail(String token, String email) async {
-    try {
-      emit(const AuthState.loading());
-      final response = await SupabaseConfig.client.auth.verifyOTP(
-        type: OtpType.email,
-        token: token,
-        email: email,
-      );
-
-      if (response.session != null) {
-        await _loadCurrentUser();
-      } else {
-        emit(const AuthState.unauthenticated());
-      }
-    } catch (e) {
-      emit(AuthState.error('Failed to verify email: ${e.toString()}'));
-    }
+    emit(const AuthState.loading());
+    final result = await _verifyEmail(VerifyEmailParams(token: token, email: email));
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (user) => emit(AuthState.authenticated(user)),
+    );
   }
 }

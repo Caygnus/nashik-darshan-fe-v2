@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../models/saved_itinerary_data.dart';
+import '../../domain/entities/saved_itinerary.dart';
 
 /// Saved Itinerary Page
 /// Displays the full saved itinerary: summary card, Edit/Share, preferences, day-by-day timeline, activity cards, More Actions.

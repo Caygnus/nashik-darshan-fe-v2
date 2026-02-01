@@ -1,5 +1,5 @@
-/// Data passed to [SavedItineraryPage] when user saves an itinerary from Customize Trip.
-/// Keeps presentation layer independent of domain; can be replaced by a domain entity later.
+/// Saved itinerary entity (domain layer, pure Dart).
+/// Used when passing saved itinerary data to UI; no Flutter dependency.
 class SavedItineraryData {
   const SavedItineraryData({
     required this.tripName,

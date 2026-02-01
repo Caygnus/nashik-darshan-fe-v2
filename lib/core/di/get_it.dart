@@ -8,9 +8,14 @@ import 'package:nashik/features/auth/data/datasources/auth_remote_datasource.dar
 import 'package:nashik/features/auth/data/datasources/auth_supabase_datasource.dart';
 import 'package:nashik/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:nashik/features/auth/domain/repositories/auth_repository.dart';
+import 'package:nashik/features/auth/domain/use_cases/complete_oauth_callback.dart';
 import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
+import 'package:nashik/features/auth/domain/use_cases/reset_password.dart';
+import 'package:nashik/features/auth/domain/use_cases/sign_in_with_google.dart';
+import 'package:nashik/features/auth/domain/use_cases/sign_out.dart';
 import 'package:nashik/features/auth/domain/use_cases/signin_with_email.dart';
 import 'package:nashik/features/auth/domain/use_cases/signup_with_email.dart';
+import 'package:nashik/features/auth/domain/use_cases/verify_email.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/category/data/datasources/category_remote_datasource.dart';
 import 'package:nashik/features/category/data/repositories/category_repository_impl.dart';
@@ -73,25 +78,40 @@ Future<void> serviceLocatorInit() async {
     () => AuthRepositoryImpl(
       remoteDataSource: locator<AuthRemoteDataSource>(),
       supabaseDataSource: locator<AuthSupabaseDataSource>(),
+      tokenStorage: locator<SecureTokenStorage>(),
     ),
   );
 
   locator.registerLazySingleton<SignupWithEmail>(
-    () => SignupWithEmail(
-      repository: locator<AuthRepository>(),
-      supabaseDataSource: locator<AuthSupabaseDataSource>(),
-    ),
+    () => SignupWithEmail(repository: locator<AuthRepository>()),
   );
 
   locator.registerLazySingleton<SigninWithEmail>(
-    () => SigninWithEmail(
-      repository: locator<AuthRepository>(),
-      supabaseDataSource: locator<AuthSupabaseDataSource>(),
-    ),
+    () => SigninWithEmail(repository: locator<AuthRepository>()),
   );
 
   locator.registerLazySingleton<GetCurrentUser>(
     () => GetCurrentUser(locator<AuthRepository>()),
+  );
+
+  locator.registerLazySingleton<SignOut>(
+    () => SignOut(repository: locator<AuthRepository>()),
+  );
+
+  locator.registerLazySingleton<SignInWithGoogle>(
+    () => SignInWithGoogle(repository: locator<AuthRepository>()),
+  );
+
+  locator.registerLazySingleton<ResetPassword>(
+    () => ResetPassword(repository: locator<AuthRepository>()),
+  );
+
+  locator.registerLazySingleton<VerifyEmail>(
+    () => VerifyEmail(repository: locator<AuthRepository>()),
+  );
+
+  locator.registerLazySingleton<CompleteOAuthCallback>(
+    () => CompleteOAuthCallback(repository: locator<AuthRepository>()),
   );
 
   locator.registerFactory<AuthCubit>(
@@ -99,7 +119,10 @@ Future<void> serviceLocatorInit() async {
       signupWithEmail: locator<SignupWithEmail>(),
       signinWithEmail: locator<SigninWithEmail>(),
       getCurrentUser: locator<GetCurrentUser>(),
-      tokenStorage: locator<SecureTokenStorage>(),
+      signOut: locator<SignOut>(),
+      signInWithGoogle: locator<SignInWithGoogle>(),
+      resetPassword: locator<ResetPassword>(),
+      verifyEmail: locator<VerifyEmail>(),
       unauthorizedNotifier: locator<UnauthorizedNotifier>(),
     ),
   );
