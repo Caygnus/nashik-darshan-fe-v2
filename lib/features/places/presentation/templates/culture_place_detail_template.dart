@@ -59,7 +59,7 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
     if (!_scrollController.hasClients) return;
     
     final scrollOffset = _scrollController.offset;
-    final imageSectionHeight = 350.h;
+    final imageSectionHeight = 400.h;
     final overlapHeight = 20.h;
     final navBarHeight = 61.h;
     
@@ -291,7 +291,6 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
                         SizedBox(
                           height: 44.h,
                           child: ListView.builder(
-                            controller: _navScrollController,
                             scrollDirection: Axis.horizontal,
                             itemCount: _sections.length,
                             itemBuilder: (context, index) {
@@ -358,7 +357,7 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
   Widget _buildHeroSection(String devanagariName, String englishName, String subtitle) {
     return Container(
       width: double.infinity,
-      height: 350.h,
+      height: 400.h,
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(
@@ -530,7 +529,7 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 44.h,
+              height: 40.h,
               child: ListView.builder(
                 controller: _navScrollController,
                 scrollDirection: Axis.horizontal,

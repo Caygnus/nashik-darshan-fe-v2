@@ -129,41 +129,36 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
     );
   }
 
-  bool get _isNaturePlace =>
-      _place != null && _place!.categoryId.trim().toLowerCase() == 'nature';
-
-  bool get _isFamilyPlace =>
-      _place != null && _place!.categoryId.trim().toLowerCase() == 'family';
-
-  bool get _isShoppingPlace =>
-      _place != null && _place!.categoryId.trim().toLowerCase() == 'shopping';
-
-  /// Hide app bar for nature, family, and shopping so template draws its own (transparent over hero).
-  bool get _hideAppBar => _isNaturePlace || _isFamilyPlace || _isShoppingPlace;
+  /// Display name for app bar (strip common suffixes).
+  String get _appBarTitle {
+    if (_place == null) return 'Place Details';
+    return _place!.name
+        .replaceAll(' Temple', '')
+        .replaceAll(' Jyotirlinga', '')
+        .replaceAll(' Mall', '');
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _hideAppBar
-          ? null
-          : AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => context.pop(),
-              ),
-              title: Text(
-                _place?.name.replaceAll(' Temple', '').replaceAll(' Jyotirlinga', '') ?? 'Place Details',
-                style: GoogleFonts.montserrat(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-              centerTitle: true,
-            ),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          _appBarTitle,
+          style: GoogleFonts.montserrat(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _place == null

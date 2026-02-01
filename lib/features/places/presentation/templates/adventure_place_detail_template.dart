@@ -64,7 +64,7 @@ class _AdventurePlaceDetailTemplateState extends State<AdventurePlaceDetailTempl
     if (!_scrollController.hasClients) return;
     
     final scrollOffset = _scrollController.offset;
-    final imageSectionHeight = 350.h; // Image section height
+    final imageSectionHeight = 400.h; // Image section height
     final overlapHeight = 20.h; // Overlap amount
     final navBarHeight = 61.h; // Navigation bar height (44 + 12 top + 8 spacing + 1 HR + 8 bottom)
     
@@ -315,7 +315,6 @@ class _AdventurePlaceDetailTemplateState extends State<AdventurePlaceDetailTempl
                         SizedBox(
                           height: 44.h,
                           child: ListView.builder(
-                            controller: _navScrollController,
                             scrollDirection: Axis.horizontal,
                             itemCount: _sections.length,
                             itemBuilder: (context, index) {
@@ -404,7 +403,7 @@ class _AdventurePlaceDetailTemplateState extends State<AdventurePlaceDetailTempl
   Widget _buildHeroSection() {
     return Container(
       width: double.infinity,
-      height: 350.h,
+      height: 400.h,
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(
@@ -584,9 +583,8 @@ class _AdventurePlaceDetailTemplateState extends State<AdventurePlaceDetailTempl
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Horizontal Navigation Section
             SizedBox(
-              height: 44.h,
+              height: 40.h,
               child: ListView.builder(
                 controller: _navScrollController,
                 scrollDirection: Axis.horizontal,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../domain/entities/place.dart';
@@ -23,61 +22,396 @@ class NaturePlaceDetailTemplate extends StatefulWidget {
 }
 
 class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
-  int _selectedTabIndex = 0;
-  final List<String> _tabs = ['About', 'How To Reach', 'Facilities'];
+  final ScrollController _scrollController = ScrollController();
+  final ScrollController _navScrollController = ScrollController();
+  int _activeSectionIndex = 0;
+  bool _showStickyNav = false;
+  bool _isScrollingToSection = false;
+  final Map<int, GlobalKey> _sectionKeys = {};
+
+  static const List<String> _sections = [
+    'About',
+    'How to Reach',
+    'Things to Do',
+    'Explore Nearby',
+    'You Might Also Like',
+    'Checklist',
+    'Visitor Information',
+    'Facilities',
+    'Reviews & Experiences',
+    'Leave No Trace',
+  ];
 
   String get _shortName => widget.place.name.replaceAll(' Waterfall', '').replaceAll(' Hills', '');
   String get _marathiName => widget.place.additionalInfo?['marathiName'] as String? ?? 'पहिने धबधबा';
   String get _subtitle => widget.place.additionalInfo?['subtitle'] as String? ?? 'Waterfall and Trek • Nashik, Maharashtra';
 
   @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < _sections.length; i++) {
+      _sectionKeys[i] = GlobalKey();
+    }
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _onScroll();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _navScrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final scrollOffset = _scrollController.offset;
+    final imageSectionHeight = 400.h;
+    final overlapHeight = 20.h;
+    final navBarHeight = 61.h;
+    final shouldShowNav = scrollOffset > (imageSectionHeight - overlapHeight - navBarHeight);
+    if (_showStickyNav != shouldShowNav) {
+      setState(() => _showStickyNav = shouldShowNav);
+    }
+    const threshold = 61.0;
+    int? newActiveIndex;
+    double minDistance = double.infinity;
+    for (int i = 0; i < _sections.length; i++) {
+      final key = _sectionKeys[i];
+      if (key?.currentContext != null) {
+        final RenderBox? renderBox = key?.currentContext?.findRenderObject() as RenderBox?;
+        if (renderBox != null) {
+          final position = renderBox.localToGlobal(Offset.zero);
+          final sectionTop = position.dy;
+          final sectionBottom = sectionTop + renderBox.size.height;
+          if (sectionTop <= threshold && sectionBottom >= threshold) {
+            newActiveIndex = i;
+            break;
+          }
+          final distance = (sectionTop - threshold).abs();
+          if (distance < minDistance) {
+            minDistance = distance;
+            newActiveIndex = i;
+          }
+        }
+      }
+    }
+    if (!_isScrollingToSection && newActiveIndex != null && _activeSectionIndex != newActiveIndex) {
+      setState(() => _activeSectionIndex = newActiveIndex!);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollNavToActiveTab(newActiveIndex!);
+      });
+    }
+  }
+
+  void _scrollNavToActiveTab(int index) {
+    if (!_navScrollController.hasClients) return;
+    const estimatedTabWidth = 110.0;
+    const estimatedSpacing = 8.0;
+    final estimatedTabLeft = index * (estimatedTabWidth + estimatedSpacing);
+    final navPosition = _navScrollController.position;
+    final navViewportWidth = navPosition.viewportDimension;
+    final targetOffset = (estimatedTabLeft + estimatedTabWidth / 2) - (navViewportWidth / 2);
+    _navScrollController.animateTo(
+      targetOffset.clamp(0.0, navPosition.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollToSection(int index) {
+    final key = _sectionKeys[index];
+    if (key?.currentContext != null) {
+      _isScrollingToSection = true;
+      setState(() => _activeSectionIndex = index);
+      const stickyNavHeight = 61.0;
+      if (!_showStickyNav) setState(() => _showStickyNav = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = key?.currentContext;
+        if (context != null && _scrollController.hasClients) {
+          final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+          if (renderBox != null) {
+            final scrollable = Scrollable.of(context);
+            final scrollablePosition = scrollable.position;
+            final scrollableRenderObject = scrollablePosition.context.storageContext.findRenderObject();
+            if (scrollableRenderObject != null) {
+              final scrollableBox = scrollableRenderObject as RenderBox;
+              final sectionTop = renderBox.localToGlobal(Offset.zero, ancestor: scrollableBox).dy;
+              final currentScrollOffset = scrollablePosition.pixels;
+              final sectionAbsolutePosition = currentScrollOffset + sectionTop;
+              final targetOffset = sectionAbsolutePosition - stickyNavHeight;
+              scrollablePosition.animateTo(
+                targetOffset.clamp(0.0, scrollablePosition.maxScrollExtent),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              ).then((_) {
+                Future.delayed(const Duration(milliseconds: 200), () {
+                  if (mounted) setState(() => _isScrollingToSection = false);
+                });
+              });
+              _scrollNavToActiveTab(index);
+              return;
+            }
+          }
+        }
+        if (key?.currentContext != null) {
+          Scrollable.ensureVisible(
+            key!.currentContext!,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: 0.0,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+          ).then((_) {
+            Future.delayed(const Duration(milliseconds: 400), () {
+              if (mounted) setState(() => _isScrollingToSection = false);
+            });
+          });
+        } else {
+          if (mounted) setState(() => _isScrollingToSection = false);
+        }
+        _scrollNavToActiveTab(index);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHero(),
-          Container(
-            width: double.infinity,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 20.h),
-                  _buildTabs(),
-                  SizedBox(height: 24.h),
-                  _buildAboutSection(),
-                  _buildBestTimeCard(),
-                  _buildSectionTitle('How to Reach'),
-                  _buildHowToReachCard(),
-                  _buildTransportButtons(),
-                  _buildSectionTitle('Things to Do'),
-                  _buildThingsToDoGrid(),
-                  _buildSectionTitle('Explore Nearby'),
-                  _buildExploreNearbyCards(),
-                  _buildSectionTitle('You Might Also Like'),
-                  _buildYouMightAlsoLikeCards(),
-                  _buildSectionTitle('Checklist'),
-                  _buildChecklistCard(),
-                  _buildSectionTitle('Visitor Information'),
-                  _buildVisitorInfoCards(),
-                  _buildSectionTitle('Facilities'),
-                  _buildFacilitiesCard(),
-                  _buildSectionTitle('Reviews & Experiences'),
-                  _buildReviewsSection(),
-                  _buildSectionTitle('Leave No Trace'),
-                  _buildLeaveNoTraceSection(),
-                  SizedBox(height: 80.h),
-                ],
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHero(),
+              Transform.translate(
+                offset: Offset(0, -20.h),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: _contentBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 44.h,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _sections.length,
+                            itemBuilder: (context, index) {
+                              final isActive = index == _activeSectionIndex;
+                              return Padding(
+                                key: ValueKey('nav-tab-$index'),
+                                padding: EdgeInsets.only(
+                                  right: index < _sections.length - 1 ? 8.w : 0,
+                                ),
+                                child: _buildNavigationTab(_sections[index], isActive, index),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 20.h),
+                        Container(height: 1.h, color: _contentBorder),
+                        SizedBox(height: 24.h),
+                        ...List.generate(_sections.length, (index) {
+                          return Column(
+                            key: _sectionKeys[index],
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionContent(index),
+                              if (index < _sections.length - 1) SizedBox(height: 32.h),
+                            ],
+                          );
+                        }),
+                        SizedBox(height: 80.h),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
+        if (_showStickyNav) _buildStickyNavigationBar(),
+      ],
+    );
+  }
+
+  Widget _buildNavigationTab(String title, bool isActive, int index) {
+    return InkWell(
+      onTap: () => _scrollToSection(index),
+      borderRadius: BorderRadius.circular(9999.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFFFF8A02) : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(9999.r),
+          border: Border.all(color: _contentBorder),
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: GoogleFonts.montserrat(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+              color: isActive ? Colors.white : const Color(0xFF374151),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildStickyNavigationBar() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.only(left: 20.w, right: 20.w, top: 12.h, bottom: 8.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 40.h,
+              child: ListView.builder(
+                controller: _navScrollController,
+                scrollDirection: Axis.horizontal,
+                itemCount: _sections.length,
+                itemBuilder: (context, index) {
+                  final isActive = index == _activeSectionIndex;
+                  return Padding(
+                    key: ValueKey('sticky-nav-tab-$index'),
+                    padding: EdgeInsets.only(
+                      right: index < _sections.length - 1 ? 8.w : 0,
+                    ),
+                    child: _buildNavigationTab(_sections[index], isActive, index),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Container(height: 1.h, color: _contentBorder),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionContent(int index) {
+    switch (index) {
+      case 0:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildAboutSection(),
+            _buildBestTimeCard(),
+          ],
+        );
+      case 1:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('How to Reach'),
+            _buildHowToReachCard(),
+            _buildTransportButtons(),
+          ],
+        );
+      case 2:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Things to Do'),
+            _buildThingsToDoGrid(),
+          ],
+        );
+      case 3:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Explore Nearby'),
+            _buildExploreNearbyCards(),
+          ],
+        );
+      case 4:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('You Might Also Like'),
+            _buildYouMightAlsoLikeCards(),
+          ],
+        );
+      case 5:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Checklist'),
+            _buildChecklistCard(),
+          ],
+        );
+      case 6:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Visitor Information'),
+            _buildVisitorInfoCards(),
+          ],
+        );
+      case 7:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Facilities'),
+            _buildFacilitiesCard(),
+          ],
+        );
+      case 8:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Reviews & Experiences'),
+            _buildReviewsSection(),
+          ],
+        );
+      case 9:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Leave No Trace'),
+            _buildLeaveNoTraceSection(),
+          ],
+        );
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   Widget _buildHero() {
@@ -86,7 +420,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
       children: [
         Container(
           width: double.infinity,
-          height: 320.h,
+          height: 400.h,
           decoration: BoxDecoration(
             image: DecorationImage(
               image: AssetImage(imageUrl),
@@ -96,7 +430,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
         ),
         Container(
           width: double.infinity,
-          height: 320.h,
+          height: 400.h,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -108,17 +442,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
             ),
           ),
         ),
+        // Audio guide button - top right (image section starts below page app bar)
         Positioned(
-          top: MediaQuery.of(context).padding.top + 8.h,
-          left: 12.w,
-          child: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new, size: 22.sp, color: Colors.white),
-            onPressed: () => context.pop(),
-            style: IconButton.styleFrom(backgroundColor: Colors.black26),
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 8.h,
+          top: 16.h,
           right: 12.w,
           child: Container(
             width: 44.w,
@@ -177,49 +503,6 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTabs() {
-    return Row(
-      children: List.generate(_tabs.length, (i) {
-        final isSelected = _selectedTabIndex == i;
-        final label = i == 0 ? 'About $_shortName' : _tabs[i];
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: i < _tabs.length - 1 ? 10.w : 0),
-            child: Material(
-              color: isSelected ? const Color(0xFFFF9933) : Colors.transparent,
-              borderRadius: BorderRadius.circular(10.r),
-              child: InkWell(
-                onTap: () => setState(() => _selectedTabIndex = i),
-                borderRadius: BorderRadius.circular(10.r),
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: isSelected ? null : Border.all(color: _contentBorder),
-                  ),
-                  child: Center(
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : _contentSubdued,
-                        fontFamily: 'Roboto',
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 
