@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nashik/core/router/route_names.dart';
 
 import '../../../places/data/repositories/place_repository_impl.dart';
 import '../../domain/entities/category.dart';
@@ -1179,10 +1178,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
         }
         
         // Navigate to place detail page
-        context.pushNamed(
-          AppRouteNames.placeDetail,
-          pathParameters: {'placeId': matchingPlace.id},
-        );
+        context.push('/place/${matchingPlace.id}');
       },
       child: Container(
         width: 160.w,
@@ -2027,10 +2023,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
   Widget _buildPlaceCard(Place place) {
     return GestureDetector(
       onTap: () {
-        context.pushNamed(
-          AppRouteNames.placeDetail,
-          pathParameters: {'placeId': place.id},
-        );
+        context.push('/place/${place.id}');
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -2332,7 +2325,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
 
   Widget _buildNaturePlaceCard(Place place) {
     return GestureDetector(
-      onTap: () => context.pushNamed(AppRouteNames.placeDetail, pathParameters: {'placeId': place.id}),
+      onTap: () => context.push('/place/${place.id}'),
       child: Container(
         width: 160.w,
         height: 200.h,
@@ -2714,7 +2707,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
   Widget _buildAdventurePlaceCard(Place place, int index) {
     final distances = ['14 km away', '26 km away', '18 km away', '32 km away', '22 km away'];
     final distance = distances[index % distances.length];
-    return GestureDetector(onTap: () => context.pushNamed(AppRouteNames.placeDetail, pathParameters: {'placeId': place.id}), child: Container(width: 160.w, height: 200.h, decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r), color: Colors.white), child: ClipRRect(borderRadius: BorderRadius.circular(12.r), child: Stack(children: [Image.asset(place.imageUrls.isNotEmpty ? place.imageUrls.first : 'assets/png/trambak.png', width: 160.w, height: 200.h, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFFF3F4F6), child: Icon(Icons.image_not_supported, size: 40.sp))), Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)]))), Positioned(top: 12.h, right: 12.w, child: Container(padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), decoration: BoxDecoration(color: const Color(0xFFF97316), borderRadius: BorderRadius.circular(4.r)), child: Text(distance, style: _getTextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: Colors.white)))), Positioned(bottom: 12.h, left: 12.w, right: 12.w, child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [Text(place.name, style: _getTextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.white, height: 1.2), maxLines: 2, overflow: TextOverflow.ellipsis)]))]))));
+    return GestureDetector(onTap: () => context.push('/place/${place.id}'), child: Container(width: 160.w, height: 200.h, decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r), color: Colors.white), child: ClipRRect(borderRadius: BorderRadius.circular(12.r), child: Stack(children: [Image.asset(place.imageUrls.isNotEmpty ? place.imageUrls.first : 'assets/png/trambak.png', width: 160.w, height: 200.h, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFFF3F4F6), child: Icon(Icons.image_not_supported, size: 40.sp))), Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)]))), Positioned(top: 12.h, right: 12.w, child: Container(padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), decoration: BoxDecoration(color: const Color(0xFFF97316), borderRadius: BorderRadius.circular(4.r)), child: Text(distance, style: _getTextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: Colors.white)))), Positioned(bottom: 12.h, left: 12.w, right: 12.w, child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [Text(place.name, style: _getTextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.white, height: 1.2), maxLines: 2, overflow: TextOverflow.ellipsis)]))]))));
   }
 
   Widget _buildRecommendedAdventureTrailsSection() {
@@ -3022,7 +3015,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
     final placeTagList = placeTags[index % placeTags.length];
     final distance = distances[index % distances.length];
     return GestureDetector(
-      onTap: () => context.pushNamed(AppRouteNames.placeDetail, pathParameters: {'placeId': place.id}),
+      onTap: () => context.push('/place/${place.id}'),
       child: Container(
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12.r), border: Border.all(color: const Color(0xFFE5E7EB), width: 1)),
@@ -3292,7 +3285,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
     final placeName = index < placeNames.length ? placeNames[index] : place.name;
     
     return GestureDetector(
-      onTap: () => context.pushNamed(AppRouteNames.placeDetail, pathParameters: {'placeId': place.id}),
+      onTap: () => context.push('/place/${place.id}'),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
@@ -3796,7 +3789,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
     final placeName = index < placeNames.length ? placeNames[index] : place.name;
     
     return GestureDetector(
-      onTap: () => context.pushNamed(AppRouteNames.placeDetail, pathParameters: {'placeId': place.id}),
+      onTap: () => context.push('/place/${place.id}'),
       child: Container(
         width: 280.w,
         decoration: BoxDecoration(

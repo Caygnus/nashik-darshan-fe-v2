@@ -40,7 +40,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
           _buildHero(),
           Container(
             width: double.infinity,
-            color: const Color(0xFF121212),
+            color: Colors.white,
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
@@ -198,7 +198,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.r),
-                    border: isSelected ? null : Border.all(color: Colors.white24),
+                    border: isSelected ? null : Border.all(color: _contentBorder),
                   ),
                   child: Center(
                     child: Text(
@@ -206,7 +206,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                       style: TextStyle(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : Colors.white,
+                        color: isSelected ? Colors.white : _contentSubdued,
                         fontFamily: 'Roboto',
                       ),
                       textAlign: TextAlign.center,
@@ -223,6 +223,12 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
     );
   }
 
+  static const Color _contentTitleColor = Color(0xFF1F2937);
+  static const Color _contentTextColor = Color(0xFF4B5563);
+  static const Color _contentCardBg = Color(0xFFF9FAFB);
+  static const Color _contentBorder = Color(0xFFE5E7EB);
+  static const Color _contentSubdued = Color(0xFF6B7280);
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: EdgeInsets.only(top: 28.h, bottom: 14.h),
@@ -231,7 +237,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
         style: GoogleFonts.montserrat(
           fontSize: 18.sp,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: _contentTitleColor,
         ),
       ),
     );
@@ -246,7 +252,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
           widget.place.description,
           style: TextStyle(
             fontSize: 14.sp,
-            color: Colors.white.withValues(alpha: 0.9),
+            color: _contentTextColor,
             height: 1.5,
             fontFamily: 'Roboto',
           ),
@@ -260,20 +266,20 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
       margin: EdgeInsets.only(top: 20.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+        color: const Color(0xFF0D9488).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.5)),
+        border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 22.sp, color: const Color(0xFF5EEAD4)),
+              Icon(Icons.calendar_today, size: 22.sp, color: const Color(0xFF0D9488)),
               SizedBox(width: 10.w),
               Text(
                 'Best Time to Visit',
-                style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: Colors.white),
+                style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: _contentTitleColor),
               ),
             ],
           ),
@@ -290,11 +296,11 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('• ', style: TextStyle(fontSize: 14.sp, color: Colors.white, fontFamily: 'Roboto')),
+        Text('• ', style: TextStyle(fontSize: 14.sp, color: _contentTitleColor, fontFamily: 'Roboto')),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.4, fontFamily: 'Roboto'),
+            style: TextStyle(fontSize: 14.sp, color: _contentTextColor, height: 1.4, fontFamily: 'Roboto'),
           ),
         ),
       ],
@@ -306,9 +312,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
       margin: EdgeInsets.only(top: 12.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: _contentCardBg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: _contentBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,19 +325,19 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
               SizedBox(width: 10.w),
               Text(
                 'From Nashik City',
-                style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: Colors.white),
+                style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: _contentTitleColor),
               ),
             ],
           ),
           SizedBox(height: 10.h),
           Text(
             'Route: Nashik + $_shortName',
-            style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.9), fontFamily: 'Roboto'),
+            style: TextStyle(fontSize: 14.sp, color: _contentTextColor, fontFamily: 'Roboto'),
           ),
           SizedBox(height: 4.h),
           Text(
             'Distance: ~25 km (40-50 mins drive)',
-            style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.9), fontFamily: 'Roboto'),
+            style: TextStyle(fontSize: 14.sp, color: _contentTextColor, fontFamily: 'Roboto'),
           ),
         ],
       ),
@@ -354,9 +360,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: _contentCardBg,
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: _contentBorder),
                 ),
                 child: Column(
                   children: [
@@ -364,7 +370,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                     SizedBox(height: 8.h),
                     Text(
                       o['label'] as String,
-                      style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Roboto'),
+                      style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: _contentTitleColor, fontFamily: 'Roboto'),
                     ),
                   ],
                 ),
@@ -406,13 +412,13 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
               SizedBox(height: 10.h),
               Text(
                 e['title'] as String,
-                style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.white),
+                style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: _contentTitleColor),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 4.h),
               Text(
                 e['subtitle'] as String,
-                style: TextStyle(fontSize: 12.sp, color: Colors.white.withValues(alpha: 0.85), fontFamily: 'Roboto'),
+                style: TextStyle(fontSize: 12.sp, color: _contentTextColor, fontFamily: 'Roboto'),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -436,9 +442,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
           margin: EdgeInsets.only(bottom: 12.h),
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: _contentCardBg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: _contentBorder),
           ),
           child: Row(
             children: [
@@ -449,7 +455,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                   width: 80.w,
                   height: 80.w,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(width: 80.w, height: 80.w, color: Colors.white12, child: Icon(Icons.image, color: Colors.white54)),
+                  errorBuilder: (_, __, ___) => Container(width: 80.w, height: 80.w, color: _contentBorder, child: Icon(Icons.image, color: _contentSubdued)),
                 ),
               ),
               SizedBox(width: 14.w),
@@ -459,19 +465,19 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                   children: [
                     Text(
                       e['title'] as String,
-                      style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: _contentTitleColor),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       e['desc'] as String,
-                      style: TextStyle(fontSize: 13.sp, color: Colors.white70, fontFamily: 'Roboto'),
+                      style: TextStyle(fontSize: 13.sp, color: _contentSubdued, fontFamily: 'Roboto'),
                     ),
                     SizedBox(height: 6.h),
                     Row(
                       children: [
                         Icon(Icons.location_on, size: 14.sp, color: const Color(0xFFFF9933)),
                         SizedBox(width: 4.w),
-                        Text(e['distance'] as String, style: TextStyle(fontSize: 12.sp, color: Colors.white70, fontFamily: 'Roboto')),
+                        Text(e['distance'] as String, style: TextStyle(fontSize: 12.sp, color: _contentSubdued, fontFamily: 'Roboto')),
                       ],
                     ),
                   ],
@@ -494,9 +500,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
         return Container(
           margin: EdgeInsets.only(bottom: 16.h),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: _contentCardBg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: _contentBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +514,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                   width: double.infinity,
                   height: 140.h,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(height: 140.h, color: Colors.white12),
+                  errorBuilder: (_, __, ___) => Container(height: 140.h, color: _contentBorder),
                 ),
               ),
               Padding(
@@ -518,19 +524,19 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                   children: [
                     Text(
                       e['title'] as String,
-                      style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600, color: _contentTitleColor),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       e['desc'] as String,
-                      style: TextStyle(fontSize: 13.sp, color: Colors.white70, fontFamily: 'Roboto'),
+                      style: TextStyle(fontSize: 13.sp, color: _contentSubdued, fontFamily: 'Roboto'),
                     ),
                     SizedBox(height: 6.h),
                     Row(
                       children: [
                         Text(
                           e['distance'] as String,
-                          style: TextStyle(fontSize: 12.sp, color: Colors.white70, fontFamily: 'Roboto'),
+                          style: TextStyle(fontSize: 12.sp, color: _contentSubdued, fontFamily: 'Roboto'),
                         ),
                         SizedBox(width: 12.w),
                         Row(
@@ -546,7 +552,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                         SizedBox(width: 4.w),
                         Text(
                           '${e['rating']}',
-                          style: TextStyle(fontSize: 12.sp, color: Colors.white70, fontFamily: 'Roboto'),
+                          style: TextStyle(fontSize: 12.sp, color: _contentSubdued, fontFamily: 'Roboto'),
                         ),
                       ],
                     ),
@@ -572,9 +578,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: _contentCardBg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: _contentBorder),
       ),
       child: GridView.count(
         shrinkWrap: true,
@@ -592,7 +598,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
               SizedBox(height: 8.h),
               Text(
                 e['label'] as String,
-                style: TextStyle(fontSize: 12.sp, color: Colors.white, fontFamily: 'Roboto'),
+                style: TextStyle(fontSize: 12.sp, color: _contentTitleColor, fontFamily: 'Roboto'),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -611,9 +617,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
           margin: EdgeInsets.only(bottom: 12.h),
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: _contentCardBg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: _contentBorder),
           ),
           child: Row(
             children: [
@@ -623,8 +629,8 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Entry Fee', style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.white)),
-                    Text('Free entry • No parking charges', style: TextStyle(fontSize: 13.sp, color: Colors.white70, fontFamily: 'Roboto')),
+                    Text('Entry Fee', style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: _contentTitleColor)),
+                    Text('Free entry • No parking charges', style: TextStyle(fontSize: 13.sp, color: _contentSubdued, fontFamily: 'Roboto')),
                   ],
                 ),
               ),
@@ -634,9 +640,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: _contentCardBg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: _contentBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,7 +651,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
                 children: [
                   Icon(Icons.warning_amber_rounded, size: 28.sp, color: const Color(0xFFFF9933)),
                   SizedBox(width: 14.w),
-                  Text('Safety Tips', style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.white)),
+                  Text('Safety Tips', style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: _contentTitleColor)),
                 ],
               ),
               SizedBox(height: 12.h),
@@ -665,9 +671,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: _contentCardBg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: _contentBorder),
       ),
       child: Row(
         children: [
@@ -677,8 +683,8 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Facilities', style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.white)),
-                Text('Local food stalls • Parking available • Local guides on request', style: TextStyle(fontSize: 13.sp, color: Colors.white70, fontFamily: 'Roboto')),
+                Text('Facilities', style: GoogleFonts.montserrat(fontSize: 15.sp, fontWeight: FontWeight.w600, color: _contentTitleColor)),
+                Text('Local food stalls • Parking available • Local guides on request', style: TextStyle(fontSize: 13.sp, color: _contentSubdued, fontFamily: 'Roboto')),
               ],
             ),
           ),
@@ -740,14 +746,14 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
             children: [
               Text(
                 text,
-                style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.4, fontFamily: 'Roboto'),
+                style: TextStyle(fontSize: 14.sp, color: _contentTextColor, height: 1.4, fontFamily: 'Roboto'),
               ),
               SizedBox(height: 8.h),
               Row(
                 children: [
-                  CircleAvatar(radius: 12.r, backgroundColor: Colors.white24),
+                  CircleAvatar(radius: 12.r, backgroundColor: _contentBorder),
                   SizedBox(width: 8.w),
-                  Text(author, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Roboto')),
+                  Text(author, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: _contentTitleColor, fontFamily: 'Roboto')),
                 ],
               ),
             ],
@@ -776,7 +782,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
         Center(
           child: Text(
             'Help preserve this natural wonder for future generations. Take only memories, leave only footprints.',
-            style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.5, fontFamily: 'Roboto'),
+            style: TextStyle(fontSize: 14.sp, color: _contentTextColor, height: 1.5, fontFamily: 'Roboto'),
             textAlign: TextAlign.center,
           ),
         ),
@@ -784,9 +790,9 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: _contentCardBg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: _contentBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,7 +804,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
               SizedBox(height: 6.h),
               Text(
                 'Choose local homestays • Buy from local vendors',
-                style: TextStyle(fontSize: 13.sp, color: Colors.white70, fontFamily: 'Roboto'),
+                style: TextStyle(fontSize: 13.sp, color: _contentSubdued, fontFamily: 'Roboto'),
               ),
             ],
           ),

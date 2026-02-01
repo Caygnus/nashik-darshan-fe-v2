@@ -199,6 +199,17 @@ class PlacesMockDataSource {
 
       // ==================== NATURE PLACES ====================
       PlaceModel(
+        id: 'pahine-waterfall',
+        name: 'Pahine Waterfall',
+        description: 'Pahine Waterfall is a scenic nature spot near Nashik, offering serene views and peaceful trails. A popular destination for nature lovers and trekkers.',
+        categoryId: 'nature',
+        imageUrls: ['assets/png/trambak.png'],
+        address: 'Pahine, Nashik, Maharashtra',
+        latitude: 19.9500,
+        longitude: 73.7000,
+        openingHours: '6:00 AM - 6:00 PM',
+      ),
+      PlaceModel(
         id: 'gangapur-dam',
         name: 'Gangapur Dam',
         description: 'Gangapur Dam is a scenic spot perfect for nature lovers, offering beautiful views and peaceful surroundings.',

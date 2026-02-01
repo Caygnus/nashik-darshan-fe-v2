@@ -59,7 +59,8 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   Widget _buildTemplate() {
     if (_place == null) return const SizedBox.shrink();
 
-    switch (_place!.categoryId.toLowerCase()) {
+    final categoryId = _place!.categoryId.trim().toLowerCase();
+    switch (categoryId) {
       case 'spiritual':
         return SpiritualPlaceDetailTemplate(place: _place!);
       case 'adventure':
@@ -129,13 +130,22 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   bool get _isNaturePlace =>
-      _place != null && _place!.categoryId.toLowerCase() == 'nature';
+      _place != null && _place!.categoryId.trim().toLowerCase() == 'nature';
+
+  bool get _isFamilyPlace =>
+      _place != null && _place!.categoryId.trim().toLowerCase() == 'family';
+
+  bool get _isShoppingPlace =>
+      _place != null && _place!.categoryId.trim().toLowerCase() == 'shopping';
+
+  /// Hide app bar for nature, family, and shopping so template draws its own (transparent over hero).
+  bool get _hideAppBar => _isNaturePlace || _isFamilyPlace || _isShoppingPlace;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _isNaturePlace ? const Color(0xFF121212) : Colors.white,
-      appBar: _isNaturePlace
+      backgroundColor: Colors.white,
+      appBar: _hideAppBar
           ? null
           : AppBar(
               backgroundColor: Colors.white,
