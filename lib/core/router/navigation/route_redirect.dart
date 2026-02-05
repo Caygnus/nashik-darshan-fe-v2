@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/router/route_paths.dart';
+import 'package:nashik/core/supabase/config.dart';
 
 /// Route redirect handler for authentication and deep links
 class RouteRedirect {
@@ -12,7 +13,7 @@ class RouteRedirect {
   ];
 
   /// Handle route redirects
-  /// 
+  ///
   /// Returns the route path to redirect to, or null if no redirect is needed.
   static String? handleRedirect(BuildContext context, GoRouterState state) {
     final uri = state.uri;
@@ -29,13 +30,12 @@ class RouteRedirect {
       return _handleDeepLink(uri);
     }
 
-    // Handle protected routes (only for normal app navigation, not deep links)
-    // TODO: Uncomment when Supabase is initialized
-    // final user = SupabaseConfig.client.auth.currentUser;
-    // if (user == null && protectedRoutes.contains(path)) {
-    //   debugPrint('🔒 Protected route without auth, redirecting to login');
-    //   return AppRoutePaths.login;
-    // }
+    // Protected routes: require Supabase auth (Supabase is initialized before router)
+    final user = SupabaseConfig.client.auth.currentUser;
+    if (user == null && protectedRoutes.any((r) => path.startsWith(r))) {
+      debugPrint('🔒 Protected route without auth, redirecting to login');
+      return AppRoutePaths.login;
+    }
 
     debugPrint('✅ No redirect needed');
     return null;

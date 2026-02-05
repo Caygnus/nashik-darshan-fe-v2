@@ -1,5 +1,6 @@
 import 'package:nashik/core/error/exceptions/server_exception.dart';
 import 'package:nashik/core/supabase/config.dart';
+import 'package:nashik/core/supabase/supabase_logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// OAuth redirect URL for Google sign-in callback
@@ -73,13 +74,15 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
         );
       }
 
+      SupabaseLogger.auth('Sign up success', action: 'email');
       return response.session!.accessToken;
     } on ServerException {
-      // Re-throw ServerException as-is
       rethrow;
     } on AuthException catch (e) {
+      SupabaseLogger.auth('Sign up failed: ${e.message}', action: 'email');
       throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
     } catch (e) {
+      SupabaseLogger.error('Sign up failed', e);
       throw ServerException(
         message: 'Failed to sign up with Supabase: ${e.toString()}',
         code: 'UNEXPECTED_ERROR',
@@ -105,10 +108,13 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
         );
       }
 
+      SupabaseLogger.auth('Sign in success', action: 'email');
       return response.session!.accessToken;
     } on AuthException catch (e) {
+      SupabaseLogger.auth('Sign in failed: ${e.message}', action: 'email');
       throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
     } catch (e) {
+      SupabaseLogger.error('Sign in failed', e);
       throw ServerException(
         message: 'Failed to sign in with Supabase: ${e.toString()}',
         code: 'UNEXPECTED_ERROR',
@@ -129,13 +135,16 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
   @override
   Future<bool> signInWithGoogle() async {
     try {
+      SupabaseLogger.oauth('Initiating Google OAuth, redirectTo: $authOAuthRedirectUrl');
       await SupabaseConfig.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: authOAuthRedirectUrl,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
+      SupabaseLogger.oauth('Google OAuth flow started');
       return true;
     } catch (e) {
+      SupabaseLogger.oauth('Google OAuth failed: $e', error: true);
       throw ServerException(
         message:
             'Failed to initiate Google Sign-In: $e\n'
@@ -149,7 +158,9 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
   Future<void> signOut() async {
     try {
       await SupabaseConfig.client.auth.signOut();
-    } catch (_) {
+      SupabaseLogger.auth('Sign out success');
+    } catch (e) {
+      SupabaseLogger.auth('Sign out (non-fatal): $e');
       // Ignore errors during sign out
     }
   }
@@ -199,18 +210,23 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
   @override
   Future<String> getSessionFromUrl(Uri uri) async {
     try {
+      SupabaseLogger.oauth('Processing OAuth callback from URL');
       await SupabaseConfig.client.auth.getSessionFromUrl(uri);
       final session = SupabaseConfig.client.auth.currentSession;
       if (session == null || session.accessToken.isEmpty) {
+        SupabaseLogger.oauth('OAuth callback: no session after getSessionFromUrl', error: true);
         throw ServerException(
           message: 'Failed to create or retrieve session from OAuth callback',
           code: 'OAUTH_CALLBACK_FAILED',
         );
       }
+      SupabaseLogger.oauth('OAuth callback success, session created');
       return session.accessToken;
     } on AuthException catch (e) {
+      SupabaseLogger.oauth('OAuth callback auth error: ${e.message}', error: true);
       throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
     } catch (e) {
+      SupabaseLogger.error('OAuth callback failed', e);
       throw ServerException(
         message: 'OAuth callback failed: ${e.toString()}',
         code: 'OAUTH_CALLBACK_FAILED',
