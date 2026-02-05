@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,38 +12,50 @@ import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 /// Transparent AppBar Widget
 /// Displays a transparent app bar with location info and user greeting
 /// Changes background to white with blur when scrolling
-class TransparentAppBarWidget extends StatelessWidget {
+class TransparentAppBarWidget extends StatefulWidget {
   final double scrollOffset;
-  
+
   const TransparentAppBarWidget({
     super.key,
     this.scrollOffset = 0.0,
   });
 
   @override
-  Widget build(final BuildContext context) {
-    // Determine if scrolling (offset > 0)
-    final bool isScrolling = scrollOffset > 0;
-    
+  State<TransparentAppBarWidget> createState() => _TransparentAppBarWidgetState();
+}
+
+class _TransparentAppBarWidgetState extends State<TransparentAppBarWidget> {
+  bool? _lastAppliedScrolling;
+
+  void _updateSystemUIIfNeeded(bool isScrolling) {
+    if (isScrolling == _lastAppliedScrolling) return;
+    _lastAppliedScrolling = isScrolling;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
+        statusBarBrightness: isScrolling ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: isScrolling
+            ? const Color(0x4DFFFFFF)
+            : Colors.transparent,
+        systemNavigationBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isScrolling = widget.scrollOffset > 0;
+
     // Text and icon colors based on scroll state
     final Color textColor = isScrolling ? Colors.black : Colors.white;
     final Color iconColor = isScrolling ? Colors.black : Colors.white;
-    
-    // Update system UI overlay style
+
+    // Only update system UI when scroll state actually changes to avoid flicker
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
-          statusBarBrightness: isScrolling ? Brightness.light : Brightness.dark,
-          systemNavigationBarColor: isScrolling 
-              ? const Color(0x4DFFFFFF) 
-              : Colors.transparent,
-          systemNavigationBarIconBrightness: isScrolling ? Brightness.dark : Brightness.light,
-        ),
-      );
+      _updateSystemUIIfNeeded(isScrolling);
     });
-    
+
     return Positioned(
       top: 0,
       left: 0,
@@ -104,7 +117,13 @@ class TransparentAppBarWidget extends StatelessWidget {
                                           authenticated: (user) => user.name,
                                           orElse: () => 'Ram Lokhande',
                                         );
-                                      } catch (e) {
+                                      } catch (e, stackTrace) {
+                                        if (kDebugMode) {
+                                          debugPrint(
+                                            'TransparentAppBar: AuthCubit not available, using default name. '
+                                            'Error: $e\n$stackTrace',
+                                          );
+                                        }
                                         userName = 'Ram Lokhande';
                                       }
                                       return Text(
@@ -113,7 +132,7 @@ class TransparentAppBarWidget extends StatelessWidget {
                                           fontSize: 13.sp,
                                           fontWeight: FontWeight.w600,
                                           color: textColor,
-                                          height: 1.2,
+                                          height: 32 / 13, // 32px line height for 13sp font
                                         ),
                                       );
                                     },

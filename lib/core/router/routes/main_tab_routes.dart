@@ -7,7 +7,7 @@ import 'package:nashik/core/router/route_paths.dart';
 import 'package:nashik/features/category/presentation/pages/category_page.dart';
 import 'package:nashik/features/events/presentation/pages/events_page.dart';
 import 'package:nashik/features/home/presentation/pages/home_screen.dart';
-import 'package:nashik/features/iternary/presentation/pages/iternary_page.dart';
+import 'package:nashik/features/itinerary/presentation/pages/itinerary_page.dart';
 import 'package:nashik/features/places/domain/repositories/place_repository.dart';
 import 'package:nashik/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:nashik/features/profile/presentation/pages/profile_page.dart';
@@ -34,7 +34,7 @@ class MainTabRoutes {
               path: AppRoutePaths.itinerary,
               name: AppRouteNames.itinerary,
               pageBuilder: (context, state) => AppRouter.getPage(
-                child: const IternaryPage(),
+                child: const ItineraryPage(),
                 state: state,
               ),
             ),

@@ -6,9 +6,12 @@ enum DeepLinkType {
   test,
   unknown;
 
+  /// Deep link URL scheme for the app.
+  static const String scheme = 'com.caygnus.nashikdarshan';
+
   /// Determine deep link type from URI
   static DeepLinkType fromUri(Uri uri) {
-    if (uri.scheme != 'com.caygnus.nashikdarshan') {
+    if (uri.scheme != scheme) {
       return DeepLinkType.unknown;
     }
 

@@ -13,19 +13,19 @@ class Place {
   final String? contactInfo;
   final Map<String, dynamic>? additionalInfo;
 
-  const Place({
+  Place({
     required this.id,
     required this.name,
     required this.description,
     required this.categoryId,
-    required this.imageUrls,
+    required List<String> imageUrls,
     this.address,
     this.latitude,
     this.longitude,
     this.openingHours,
     this.contactInfo,
     this.additionalInfo,
-  });
+  }) : imageUrls = List.unmodifiable(List.from(imageUrls));
 
   @override
   bool operator ==(Object other) =>

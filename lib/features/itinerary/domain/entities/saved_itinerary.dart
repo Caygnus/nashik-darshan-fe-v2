@@ -1,3 +1,18 @@
+/// Tag color key for activity tags. Use [fromString] when parsing from storage or API.
+enum ItineraryTagColor {
+  purple,
+  orange,
+  blue;
+
+  static ItineraryTagColor fromString(String value) {
+    return switch (value) {
+      'orange' => ItineraryTagColor.orange,
+      'blue' => ItineraryTagColor.blue,
+      _ => ItineraryTagColor.purple,
+    };
+  }
+}
+
 /// Saved itinerary entity (domain layer, pure Dart).
 /// Used when passing saved itinerary data to UI; no Flutter dependency.
 class SavedItineraryData {
@@ -69,6 +84,5 @@ class SavedActivity {
   final String description;
   final String duration;
   final String distance;
-  /// 'purple' | 'orange' | 'blue' for tag color
-  final String tagColorKey;
+  final ItineraryTagColor tagColorKey;
 }

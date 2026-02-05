@@ -72,28 +72,32 @@ class SpiritualCircuitCard extends StatelessWidget {
             ),
             SizedBox(width: 12.w),
             // Right side - Book tour button
-            InkWell(
-              onTap: onBookTour,
-              borderRadius: BorderRadius.circular(8.r),
-              child: Container(
-                width: 99.w,
-                height: 45.h,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: const Color(0xFFE5E7EB),
-                    width: 1,
+            Semantics(
+              label: 'Book tour',
+              button: true,
+              child: InkWell(
+                onTap: onBookTour,
+                borderRadius: BorderRadius.circular(8.r),
+                child: Container(
+                  width: 99.w,
+                  height: 45.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Text(
-                    'Book tour',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500, // Medium
-                      color: const Color(0xFF8B2635),
-                      fontFamily: 'Roboto',
+                  child: Center(
+                    child: Text(
+                      'Book tour',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500, // Medium
+                        color: const Color(0xFF8B2635),
+                        fontFamily: 'Roboto',
+                      ),
                     ),
                   ),
                 ),

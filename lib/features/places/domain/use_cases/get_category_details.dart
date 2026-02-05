@@ -1,5 +1,5 @@
-import '../entities/category.dart';
-import '../repositories/place_repository.dart';
+import 'package:nashik/features/places/domain/entities/category.dart';
+import 'package:nashik/features/places/domain/repositories/place_repository.dart';
 
 /// Use case to get category details by ID
 class GetCategoryDetails {

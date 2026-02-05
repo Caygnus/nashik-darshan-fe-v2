@@ -1,10 +1,17 @@
 /// API path constants for Nashik Darshan API.
 /// Do not add query params here; pass them at call site.
+///
+/// [baseUrl] is configurable at build time via:
+///   flutter run --dart-define=API_BASE_URL=https://your-api.example.com/v1
+/// For runtime config (e.g. .env), pass [baseUrl] when constructing the API client
+/// (e.g. from [Config.I.baseUrl] after Config is initialized).
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String baseUrl =
-      'https://5p9ubi66hh.execute-api.ap-south-1.amazonaws.com/v1';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://5p9ubi66hh.execute-api.ap-south-1.amazonaws.com/v1',
+  );
 
   // Auth
   static const String authSignup = '/auth/signup';

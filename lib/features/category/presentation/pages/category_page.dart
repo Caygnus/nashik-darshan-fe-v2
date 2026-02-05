@@ -9,37 +9,20 @@ import '../../../places/domain/repositories/place_repository.dart';
 import '../../../places/presentation/widgets/event_card.dart';
 import '../widgets/spiritual_circuit_card.dart';
 
-// Helper function to safely get Poppins font with fallback
-TextStyle _getPoppinsStyle({
+/// Returns a [TextStyle] with Roboto as the font family (safe fallback when
+/// custom fonts like Poppins/Montserrat are not available).
+TextStyle _getFallbackTextStyle({
   required double fontSize,
   FontWeight? fontWeight,
   Color? color,
   double? height,
 }) {
-  // Use system font as fallback when Google Fonts fails
   return TextStyle(
     fontSize: fontSize,
     fontWeight: fontWeight ?? FontWeight.normal,
     color: color,
     height: height,
-    fontFamily: 'Roboto', // System fallback
-  );
-}
-
-// Helper function to safely get Montserrat font with fallback
-TextStyle _getMontserratStyle({
-  required double fontSize,
-  FontWeight? fontWeight,
-  Color? color,
-  double? height,
-}) {
-  // Use system font as fallback when Google Fonts fails
-  return TextStyle(
-    fontSize: fontSize,
-    fontWeight: fontWeight ?? FontWeight.normal,
-    color: color,
-    height: height,
-    fontFamily: 'Roboto', // System fallback
+    fontFamily: 'Roboto',
   );
 }
 
@@ -73,7 +56,6 @@ class _CategoryPageState extends State<CategoryPage> {
 
     try {
       final categories = await _repository.getCategories();
-      debugPrint('✅ Loaded ${categories.length} categories');
 
       if (mounted) {
         setState(() {
@@ -81,9 +63,7 @@ class _CategoryPageState extends State<CategoryPage> {
           _isLoading = false;
         });
       }
-    } catch (e, stackTrace) {
-      debugPrint('❌ Error loading categories: $e');
-      debugPrint('Stack trace: $stackTrace');
+    } catch (e, _) {
       if (mounted) {
         setState(() {
           _categories = [];
@@ -95,13 +75,6 @@ class _CategoryPageState extends State<CategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🏗️ CategoryPage build: isLoading=$_isLoading, categories=${_categories.length}');
-    
-    // Test widget to ensure something renders
-    if (_categories.isEmpty && !_isLoading) {
-      debugPrint('⚠️ No categories but not loading - showing empty state');
-    }
-    
     return Container(
       color: Colors.white,
       child: Column(
@@ -125,7 +98,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 automaticallyImplyLeading: false,
                 title: Text(
                   'Categories',
-                  style: _getPoppinsStyle(
+                  style: _getFallbackTextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF111827),
@@ -168,8 +141,6 @@ class _CategoryPageState extends State<CategoryPage> {
             );
           }
 
-          debugPrint('📦 Building content with ${_categories.length} categories');
-          
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -184,13 +155,9 @@ class _CategoryPageState extends State<CategoryPage> {
                     builder: (context) {
                       try {
                         return EventCard(
-                          onBookNow: () {
-                            debugPrint('Book Now tapped');
-                          },
+                          onBookNow: () {},
                         );
-                      } catch (e, stackTrace) {
-                        debugPrint('❌ Error building EventCard: $e');
-                        debugPrint('Stack: $stackTrace');
+                      } catch (e, _) {
                         return Container(
                           width: 352.w,
                           height: 135.h,
@@ -214,7 +181,6 @@ class _CategoryPageState extends State<CategoryPage> {
                       Builder(
                         builder: (context) {
                           try {
-                            debugPrint('🔨 Building grid with ${_categories.length} items');
                             return GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -227,17 +193,10 @@ class _CategoryPageState extends State<CategoryPage> {
                               ),
                               itemCount: _categories.length,
                               itemBuilder: (context, index) {
-                                if (index >= _categories.length) {
-                                  debugPrint('⚠️ Index $index out of bounds (${_categories.length})');
-                                  return const SizedBox.shrink();
-                                }
                                 try {
                                   final category = _categories[index];
-                                  debugPrint('🎴 Building card $index: ${category.name}');
                                   return _buildCategoryCard(category);
-                                } catch (e, stackTrace) {
-                                  debugPrint('❌ Error building card $index: $e');
-                                  debugPrint('Stack: $stackTrace');
+                                } catch (e, _) {
                                   return Container(
                                     width: 168.w,
                                     height: 233.h,
@@ -249,9 +208,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                 }
                               },
                             );
-                          } catch (e, stackTrace) {
-                            debugPrint('❌ Error building grid: $e');
-                            debugPrint('Stack: $stackTrace');
+                          } catch (e, _) {
                             return Container(
                               height: 200.h,
                               color: Colors.orange[100],
@@ -266,7 +223,6 @@ class _CategoryPageState extends State<CategoryPage> {
                       // Spiritual Circuit Card - appears directly below category cards
                       SpiritualCircuitCard(
                         onBookTour: () {
-                          debugPrint('Book tour tapped');
                           // TODO: Navigate to tour booking page
                         },
                       ),
@@ -404,7 +360,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     // Category Name
                     Text(
                       category.name,
-                      style: _getPoppinsStyle(
+                      style: _getFallbackTextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600, // SemiBold
                         color: Colors.white,
@@ -418,7 +374,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     // Sub heading (description)
                     Text(
                       category.description,
-                      style: _getMontserratStyle(
+                      style: _getFallbackTextStyle(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w400, // Regular
                         color: Colors.white,
@@ -436,9 +392,7 @@ class _CategoryPageState extends State<CategoryPage> {
         ),
       ),
     );
-    } catch (e, stackTrace) {
-      debugPrint('❌ Error building category card: $e');
-      debugPrint('Stack trace: $stackTrace');
+    } catch (e, _) {
       // Return a placeholder card if there's an error
       return Container(
         width: 168.w,

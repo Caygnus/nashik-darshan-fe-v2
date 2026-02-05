@@ -26,7 +26,7 @@ class ApiClient {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            validateStatus: (status) => true,
+            validateStatus: (status) => status != null && status >= 200 && status < 300,
           ),
         ) {
     _dio.interceptors.add(

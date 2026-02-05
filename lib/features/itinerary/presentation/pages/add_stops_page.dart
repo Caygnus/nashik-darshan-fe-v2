@@ -21,6 +21,13 @@ class _AddStopsPageState extends State<AddStopsPage> {
   String _selectedFilter = 'Must-see';
   final List<String> _dayTabs = ['Day 1 • 3 stops', 'Day 2 • 4 stops'];
   final List<String> _filters = ['Must-see', 'Near me', 'Favorites', 'Trending'];
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +121,7 @@ class _AddStopsPageState extends State<AddStopsPage> {
               SizedBox(height: 24.h),
               _buildSectionTitle('Your Itinerary'),
               SizedBox(height: 12.h),
+              // TODO: Implement onRemove, onNotes (itinerary cards) and onAdd (recommendation cards) handlers
               _buildItineraryCard(
                 imagePath: 'assets/png/trambak.png',
                 title: 'Trimbakeshwar Temple',
@@ -128,7 +136,7 @@ class _AddStopsPageState extends State<AddStopsPage> {
               SizedBox(height: 12.h),
               _buildItineraryCard(
                 imagePath: 'assets/png/trambak.png',
-                title: 'Pahine waterfalll',
+                title: 'Pahine Waterfall',
                 tag: 'Waterfall',
                 tagColor: const Color(0xFFEDE9FE),
                 tagTextColor: const Color(0xFF6D28D9),
@@ -262,11 +270,22 @@ class _AddStopsPageState extends State<AddStopsPage> {
           Icon(Icons.search, size: 22.sp, color: const Color(0xFF9CA3AF)),
           SizedBox(width: 12.w),
           Expanded(
-            child: Text(
-              'Search places, e.g., Trimbakeshwar, Sula Vineyards...',
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search places, e.g., Trimbakeshwar, Sula Vineyards...',
+                hintStyle: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF9CA3AF),
+                  fontFamily: 'Roboto',
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
               style: TextStyle(
                 fontSize: 14.sp,
-                color: const Color(0xFF9CA3AF),
+                color: const Color(0xFF111827),
                 fontFamily: 'Roboto',
               ),
             ),

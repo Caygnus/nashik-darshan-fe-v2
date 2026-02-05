@@ -39,7 +39,8 @@ enum CategoryType {
 }
 
 extension CategoryTypeExtension on CategoryType {
-  String get name {
+  /// Display label (e.g. 'Spiritual'). Use this instead of [Enum.name] for UI.
+  String get displayName {
     switch (this) {
       case CategoryType.spiritual:
         return 'Spiritual';
@@ -57,6 +58,6 @@ extension CategoryTypeExtension on CategoryType {
   }
 
   String get id {
-    return name.toLowerCase();
+    return displayName.toLowerCase();
   }
 }

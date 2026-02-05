@@ -81,6 +81,12 @@ class DiscoverNashikPage extends StatelessWidget {
             width: double.infinity,
             height: 280.h,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: double.infinity,
+              height: 280.h,
+              color: const Color(0xFFF3F4F6),
+              child: Icon(Icons.image_not_supported, size: 40.sp, color: Colors.grey),
+            ),
           ),
         ),
         Container(
@@ -534,6 +540,12 @@ class DiscoverNashikPage extends StatelessWidget {
               width: 64.w,
               height: 64.w,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 64.w,
+                height: 64.w,
+                color: const Color(0xFFF3F4F6),
+                child: Icon(Icons.image_not_supported, size: 24.sp, color: Colors.grey),
+              ),
             ),
           ),
           SizedBox(width: 14.w),
@@ -615,7 +627,16 @@ class DiscoverNashikPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(imagePath, fit: BoxFit.cover),
+            Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: double.infinity,
+                height: 100.h,
+                color: const Color(0xFFF3F4F6),
+                child: Icon(Icons.image_not_supported, size: 40.sp, color: Colors.grey),
+              ),
+            ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -723,7 +744,16 @@ class DiscoverNashikPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(imagePath, fit: BoxFit.cover),
+            Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: double.infinity,
+                height: 128.h,
+                color: const Color(0xFFF3F4F6),
+                child: Icon(Icons.image_not_supported, size: 40.sp, color: Colors.grey),
+              ),
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -816,9 +846,10 @@ class DiscoverNashikPage extends StatelessWidget {
   }
 
   Widget _buildUpcomingEventsSection() {
+    // TODO: Replace with dynamically fetched events when events API is available
     final events = [
-      ('Nashik Music Festival', 'April 2024'),
-      ('Grape Harvest Festival', 'March 2024'),
+      ('Nashik Music Festival', 'April 2025'),
+      ('Grape Harvest Festival', 'March 2025'),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

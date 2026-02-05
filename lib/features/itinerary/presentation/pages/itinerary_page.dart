@@ -6,14 +6,14 @@ import 'package:nashik/core/router/route_names.dart';
 
 /// Itinerary Page
 /// Main page for planning and viewing itineraries
-class IternaryPage extends StatefulWidget {
-  const IternaryPage({super.key});
+class ItineraryPage extends StatefulWidget {
+  const ItineraryPage({super.key});
 
   @override
-  State<IternaryPage> createState() => _IternaryPageState();
+  State<ItineraryPage> createState() => _ItineraryPageState();
 }
 
-class _IternaryPageState extends State<IternaryPage> {
+class _ItineraryPageState extends State<ItineraryPage> {
   String _selectedDuration = '1-Day';
   String _selectedType = 'Family';
 

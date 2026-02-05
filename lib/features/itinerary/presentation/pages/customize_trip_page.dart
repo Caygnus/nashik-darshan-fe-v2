@@ -198,7 +198,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     final name = p['name'] ?? '';
     final category = p['category'] ?? '';
     final distance = p['distance'] ?? '';
-    final tagColorKey = p['tagColor'] ?? 'purple';
+    final tagColorKey = ItineraryTagColor.fromString(p['tagColor'] ?? 'purple');
     final desc = _activityDescription(name);
     final duration = _activityDuration(name);
     return SavedActivity(
@@ -209,6 +209,14 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
       distance: distance,
       tagColorKey: tagColorKey,
     );
+  }
+
+  Color _tagColorFor(ItineraryTagColor key) {
+    return switch (key) {
+      ItineraryTagColor.orange => const Color(0xFFFF9820),
+      ItineraryTagColor.blue => const Color(0xFF2563EB),
+      ItineraryTagColor.purple => const Color(0xFF7C3AED),
+    };
   }
 
   String _activityDescription(String name) {
@@ -1160,17 +1168,15 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
           ],
         ),
         SizedBox(height: 12.h),
-        ...places.map((p) => _buildDayPlaceCard(p['name']!, p['category']!, p['distance']!, p['tagColor']!)),
+        ...places.map((p) => _buildDayPlaceCard(p['name']!, p['category']!, p['distance']!, ItineraryTagColor.fromString(p['tagColor'] ?? 'purple'))),
         SizedBox(height: 8.h),
         _buildAddPlaceButton(title),
       ],
     );
   }
 
-  Widget _buildDayPlaceCard(String name, String category, String distance, String tagColorKey) {
-    Color tagColor = const Color(0xFF7C3AED);
-    if (tagColorKey == 'orange') tagColor = const Color(0xFFFF9820);
-    if (tagColorKey == 'blue') tagColor = const Color(0xFF2563EB);
+  Widget _buildDayPlaceCard(String name, String category, String distance, ItineraryTagColor tagColorKey) {
+    final tagColor = _tagColorFor(tagColorKey);
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: Container(
@@ -1536,9 +1542,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
           child: Row(
             children: [
               ...places.map((p) {
-                Color tagColor = const Color(0xFF7C3AED);
-                if (p['tagColor'] == 'orange') tagColor = const Color(0xFFFF9820);
-                if (p['tagColor'] == 'blue') tagColor = const Color(0xFF2563EB);
+                final tagColor = _tagColorFor(ItineraryTagColor.fromString(p['tagColor'] ?? 'purple'));
                 return Padding(
                   padding: EdgeInsets.only(right: 10.w),
                   child: SizedBox(

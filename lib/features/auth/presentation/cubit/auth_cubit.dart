@@ -29,6 +29,7 @@ class AuthCubit extends Cubit<AuthState> {
         _signInWithGoogle = signInWithGoogle,
         _resetPassword = resetPassword,
         _verifyEmail = verifyEmail,
+        _unauthorizedNotifier = unauthorizedNotifier,
         super(const AuthState.initial()) {
     unauthorizedNotifier.setCallback(this.signOut);
     _initializeAuthState();
@@ -41,7 +42,18 @@ class AuthCubit extends Cubit<AuthState> {
   final SignInWithGoogle _signInWithGoogle;
   final ResetPassword _resetPassword;
   final VerifyEmail _verifyEmail;
+  final UnauthorizedNotifier _unauthorizedNotifier;
 
+  @override
+  Future<void> close() {
+    _unauthorizedNotifier.clearCallback();
+    return super.close();
+  }
+
+  /// Initializes auth state from current user. Does not yet subscribe to
+  /// Supabase auth.onAuthStateChange. Add that listener before production so
+  /// session persistence, OAuth callbacks, and sign-out from other sources
+  /// are handled. (Track re-enable in a GitHub issue to avoid shipping without it.)
   void _initializeAuthState() async {
     final result = await _getCurrentUser();
     result.fold(

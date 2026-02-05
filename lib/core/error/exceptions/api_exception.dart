@@ -15,8 +15,10 @@ class ApiException extends AppException {
   @override
   String toString() => 'ApiException: $message (statusCode: $statusCode)';
 
-  bool get isUnauthorized => statusCode == 401;
-  bool get isNotFound => statusCode == 404;
   bool get isBadRequest => statusCode == 400;
+  bool get isUnauthorized => statusCode == 401;
+  bool get isForbidden => statusCode == 403;
+  bool get isNotFound => statusCode == 404;
+  bool get isConflict => statusCode == 409;
   bool get isServerError => statusCode != null && statusCode! >= 500;
 }

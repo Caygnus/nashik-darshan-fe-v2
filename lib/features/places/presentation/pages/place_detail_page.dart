@@ -34,6 +34,7 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   PlaceRepository get _repository => widget.placeRepository;
   Place? _place;
   bool _isLoading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -42,17 +43,24 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   Future<void> _loadPlace() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
 
     try {
       final place = await GetPlaceDetails(_repository).call(widget.placeId);
+      if (!mounted) return;
       setState(() {
         _place = place;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
-      // Handle error
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = 'Something went wrong. Please try again.';
+      });
     }
   }
 
@@ -129,13 +137,14 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
     );
   }
 
-  /// Display name for app bar (strip common suffixes).
+  /// Display name for app bar (strip common suffixes, case-insensitive).
   String get _appBarTitle {
     if (_place == null) return 'Place Details';
-    return _place!.name
-        .replaceAll(' Temple', '')
-        .replaceAll(' Jyotirlinga', '')
-        .replaceAll(' Mall', '');
+    var title = _place!.name;
+    for (final suffix in [' Temple', ' Jyotirlinga', ' Mall']) {
+      title = title.replaceAll(RegExp(RegExp.escape(suffix), caseSensitive: false), '');
+    }
+    return title;
   }
 
   @override
@@ -161,9 +170,33 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _place == null
-              ? const Center(child: Text('Place not found'))
-              : _buildTemplate(),
+          : _loadError != null
+              ? Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.w),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48.sp, color: Colors.grey),
+                        SizedBox(height: 16.h),
+                        Text(
+                          _loadError!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16.sp, color: const Color(0xFF6B7280)),
+                        ),
+                        SizedBox(height: 24.h),
+                        TextButton.icon(
+                          onPressed: _loadPlace,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : _place == null
+                  ? const Center(child: Text('Place not found'))
+                  : _buildTemplate(),
     );
   }
 }

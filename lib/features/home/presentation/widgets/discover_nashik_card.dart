@@ -71,28 +71,32 @@ class DiscoverNashikCard extends StatelessWidget {
               ),
               SizedBox(height: 6.h),
               Center(
-                child: GestureDetector(
-                  onTap: () => context.pushNamed(AppRouteNames.discoverNashik),
-                  child: Container(
-                    width: 320.w,
-                    height: 42.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: const Color(0xFFE5E7EB),
-                        width: 1,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Discover Nashik',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600, // SemiBold
-                          color: const Color(0xFFFF9C4B),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => context.pushNamed(AppRouteNames.discoverNashik),
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Container(
+                      width: 320.w,
+                      height: 42.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: const Color(0xFFE5E7EB),
+                          width: 1,
                         ),
-                        textAlign: TextAlign.center,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Discover Nashik',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600, // SemiBold
+                            color: const Color(0xFFFF9C4B),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                   ),

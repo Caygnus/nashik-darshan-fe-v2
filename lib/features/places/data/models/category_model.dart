@@ -12,16 +12,24 @@ class CategoryModel extends Category {
     required super.significance,
   });
 
-  /// Create CategoryModel from JSON
+  /// Create CategoryModel from JSON.
+  /// Missing or non-String values are replaced with empty string for robustness.
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      iconPath: json['iconPath'] as String,
-      imagePath: json['imagePath'] as String,
-      significance: json['significance'] as String,
+      id: _readString(json, 'id'),
+      name: _readString(json, 'name'),
+      description: _readString(json, 'description'),
+      iconPath: _readString(json, 'iconPath'),
+      imagePath: _readString(json, 'imagePath'),
+      significance: _readString(json, 'significance'),
     );
+  }
+
+  static String _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return '';
+    if (value is String) return value;
+    return value.toString();
   }
 
   /// Convert CategoryModel to JSON
@@ -36,15 +44,6 @@ class CategoryModel extends Category {
     };
   }
 
-  /// Convert CategoryModel to Category entity
-  Category toEntity() {
-    return Category(
-      id: id,
-      name: name,
-      description: description,
-      iconPath: iconPath,
-      imagePath: imagePath,
-      significance: significance,
-    );
-  }
+  /// Returns this as [Category]. No allocation; [CategoryModel] extends [Category].
+  Category toEntity() => this;
 }

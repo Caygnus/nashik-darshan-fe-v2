@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:nashik/core/router/route_names.dart';
+
 import '../../domain/entities/saved_itinerary.dart';
 
 /// Saved Itinerary Page
@@ -21,6 +23,7 @@ class SavedItineraryPage extends StatefulWidget {
 
 class _SavedItineraryPageState extends State<SavedItineraryPage> {
   int _selectedDayIndex = 0;
+  /// Activity title → user note. TODO: Persist (e.g. local storage or backend) so notes survive navigation and app restart.
   final Map<String, String> _notesByActivity = {};
   static final DateFormat _savedAtFormat = DateFormat('d MMM yyyy \'at\' HH.mm');
 
@@ -253,7 +256,12 @@ class _SavedItineraryPageState extends State<SavedItineraryPage> {
               color: const Color(0xFFFF9820),
               borderRadius: BorderRadius.circular(12.r),
               child: InkWell(
-                onTap: () => context.pop(),
+                onTap: () {
+                  context.pushNamed(
+                    AppRouteNames.addStops,
+                    queryParameters: {'tripTitle': _data?.tripName ?? 'Your Nashik Trip'},
+                  );
+                },
                 borderRadius: BorderRadius.circular(12.r),
                 child: Center(
                   child: Text(
@@ -460,28 +468,20 @@ class _SavedItineraryPageState extends State<SavedItineraryPage> {
     );
   }
 
-  Color _tagColor(String key) {
-    switch (key) {
-      case 'orange':
-        return const Color(0xFFFF9820);
-      case 'blue':
-        return const Color(0xFF2563EB);
-      case 'purple':
-      default:
-        return const Color(0xFF7C3AED);
-    }
+  Color _tagColor(ItineraryTagColor key) {
+    return switch (key) {
+      ItineraryTagColor.orange => const Color(0xFFFF9820),
+      ItineraryTagColor.blue => const Color(0xFF2563EB),
+      ItineraryTagColor.purple => const Color(0xFF7C3AED),
+    };
   }
 
-  Color _tagBgColor(String key) {
-    switch (key) {
-      case 'orange':
-        return const Color(0xFFFFF7ED);
-      case 'blue':
-        return const Color(0xFFDBEAFE);
-      case 'purple':
-      default:
-        return const Color(0xFFEDE9FE);
-    }
+  Color _tagBgColor(ItineraryTagColor key) {
+    return switch (key) {
+      ItineraryTagColor.orange => const Color(0xFFFFF7ED),
+      ItineraryTagColor.blue => const Color(0xFFDBEAFE),
+      ItineraryTagColor.purple => const Color(0xFFEDE9FE),
+    };
   }
 
   Widget _buildActivityCard(SavedActivity activity) {

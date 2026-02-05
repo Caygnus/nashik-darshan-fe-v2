@@ -23,7 +23,7 @@ class DeepLinkService {
   }
 
   Future<void> _handleDeepLink(Uri uri) async {
-    if (uri.scheme != 'com.caygnus.nashikdarshan') {
+    if (uri.scheme != DeepLinkType.scheme) {
       return;
     }
 

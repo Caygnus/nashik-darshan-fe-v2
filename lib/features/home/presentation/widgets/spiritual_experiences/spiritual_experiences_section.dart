@@ -52,23 +52,6 @@ class SpiritualExperiencesSection extends StatelessWidget {
               ),
             ],
           ),
-          // TODO: Uncomment when needed
-          // SizedBox(height: 12.h),
-          // Row(
-          //   children: [
-          //     const SpiritualExperienceCard(
-          //       iconPath: 'assets/svg/person.svg',
-          //       title: 'Spiritual Guide',
-          //       subtitle: 'Local experts',
-          //     ),
-          //     SizedBox(width: 12.w),
-          //     const SpiritualExperienceCard(
-          //       iconPath: 'assets/svg/puja.svg',
-          //       title: 'Puja Rituals',
-          //       subtitle: 'Book now',
-          //     ),
-          //   ],
-          // ),
         ],
       ),
     );
