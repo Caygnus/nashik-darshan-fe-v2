@@ -41,6 +41,7 @@ class CategoryCubit extends Cubit<CategoryState> {
       slug: slug,
       name: name,
     ));
+    if (isClosed) return;
     result.fold(
       (failure) => emit(CategoryError(failure.message)),
       (data) => emit(CategoryListLoaded(data.items, data.total)),
@@ -50,6 +51,7 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> loadCategoryById(String id) async {
     emit(CategoryLoading());
     final result = await _getCategoryById(id);
+    if (isClosed) return;
     result.fold(
       (failure) => emit(CategoryError(failure.message)),
       (category) => emit(CategoryDetailLoaded(category)),
@@ -59,6 +61,7 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> loadCategoryBySlug(String slug) async {
     emit(CategoryLoading());
     final result = await _getCategoryBySlug(slug);
+    if (isClosed) return;
     result.fold(
       (failure) => emit(CategoryError(failure.message)),
       (category) => emit(CategoryDetailLoaded(category)),

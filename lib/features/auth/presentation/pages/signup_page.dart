@@ -3,11 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/utils/launch_url.dart';
 import 'package:nashik/core/theme/colors.dart';
 import 'package:nashik/core/utils/loading_overlay.dart';
 import 'package:nashik/core/utils/snackbar.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+/// URLs for legal pages. Replace with your app's hosted terms and privacy pages when ready.
+const String _termsOfServiceUrl = 'https://nashikdarshan.app/terms';
+const String _privacyPolicyUrl = 'https://nashikdarshan.app/privacy';
 
 enum PasswordStrength { weak, medium, strong }
 
@@ -118,6 +124,22 @@ class _SignupPageState extends State<SignupPage> {
         password: _passwordController.text,
         name: name,
       );
+    }
+  }
+
+  Future<void> _openTermsOfService() async {
+    try {
+      await openUrl(_termsOfServiceUrl, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) Snackbar.showError('Could not open Terms of Service');
+    }
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    try {
+      await openUrl(_privacyPolicyUrl, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) Snackbar.showError('Could not open Privacy Policy');
     }
   }
 
@@ -654,9 +676,7 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                   WidgetSpan(
                                     child: GestureDetector(
-                                      onTap: () {
-                                        // TODO: Navigate to Terms of Service
-                                      },
+                                      onTap: _openTermsOfService,
                                       child: Text(
                                         'Terms of Service',
                                         style: TextStyle(
@@ -671,9 +691,7 @@ class _SignupPageState extends State<SignupPage> {
                                   const TextSpan(text: ' and '),
                                   WidgetSpan(
                                     child: GestureDetector(
-                                      onTap: () {
-                                        // TODO: Navigate to Privacy Policy
-                                      },
+                                      onTap: _openPrivacyPolicy,
                                       child: Text(
                                         'Privacy Policy',
                                         style: TextStyle(

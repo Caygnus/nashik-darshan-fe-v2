@@ -4,11 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/utils/snackbar.dart';
 
 import '../../domain/entities/saved_itinerary.dart';
+import 'customize_trip_steps/customize_trip_steps.dart';
 
 /// Customize Trip Page
+///
 /// Multi-step flow: Trip Overview → Trip Basics → Travel Preferences → Plan Your Days → Final Preview.
+/// Each step is built in this file; for better maintainability and testability, consider extracting
+/// steps into separate widgets under [customize_trip_steps/] (see [CustomizeTripSectionTitle]).
 class CustomizeTripPage extends StatefulWidget {
   const CustomizeTripPage({super.key});
 
@@ -155,26 +160,29 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     for (var dayIndex = 0; dayIndex < _totalDays; dayIndex++) {
       final d = start.add(Duration(days: dayIndex));
       final shortDate = _displayDateFormat.format(d);
-      final slots = <SavedSlotPlan>[];
+      // Use day 0 places for all days until per-day state is implemented
+      final morningActivities = _morningPlaces.map((p) => _placeToActivity(p)).toList();
+      final afternoonActivities = _afternoonPlaces.map((p) => _placeToActivity(p)).toList();
+      final eveningActivities = _eveningPlaces.map((p) => _placeToActivity(p)).toList();
 
-      if (dayIndex == 0) {
-        slots.add(SavedSlotPlan(
+      final slots = <SavedSlotPlan>[
+        SavedSlotPlan(
           slotName: 'Morning',
           timeRange: '08:00 - 12:00',
-          activities: _morningPlaces.map((p) => _placeToActivity(p)).toList(),
+          activities: morningActivities,
           travelTimeAfter: _morningPlaces.length > 1 ? '8 min' : null,
-        ));
-        slots.add(SavedSlotPlan(
+        ),
+        SavedSlotPlan(
           slotName: 'Afternoon',
           timeRange: '13:30 - 16:30',
-          activities: _afternoonPlaces.map((p) => _placeToActivity(p)).toList(),
-        ));
-        slots.add(SavedSlotPlan(
+          activities: afternoonActivities,
+        ),
+        SavedSlotPlan(
           slotName: 'Evening',
           timeRange: '17:00 - 21:00',
-          activities: _eveningPlaces.map((p) => _placeToActivity(p)).toList(),
-        ));
-      }
+          activities: eveningActivities,
+        ),
+      ];
 
       dayPlans.add(SavedDayPlan(dayIndex: dayIndex, shortDate: shortDate, slots: slots));
     }
@@ -346,27 +354,12 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     }
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.only(top: 24.h, bottom: 12.h),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 18.sp,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF111827),
-          fontFamily: 'Roboto',
-        ),
-      ),
-    );
-  }
-
   // ---------- Step 0: Trip Overview ----------
   Widget _buildTripOverview() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Trip Overview'),
+        CustomizeTripSectionTitle('Trip Overview'),
         Row(
           children: [
             Expanded(
@@ -423,7 +416,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
             ),
           ),
         ),
-        _buildSectionTitle('Trip Type'),
+        CustomizeTripSectionTitle('Trip Type'),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -455,7 +448,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
             }).toList(),
           ),
         ),
-        _buildSectionTitle('Number of Travellers'),
+        CustomizeTripSectionTitle('Number of Travellers'),
         _buildTravellersCard(),
         SizedBox(height: 24.h),
       ],
@@ -685,11 +678,11 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Trip Basics'),
+        CustomizeTripSectionTitle('Trip Basics'),
         _buildTripNameCard(),
-        _buildSectionTitle('Destination & Dates'),
+        CustomizeTripSectionTitle('Destination & Dates'),
         _buildDestinationCard(),
-        _buildSectionTitle('Travel Preferences'),
+        CustomizeTripSectionTitle('Travel Preferences'),
         _buildTravelStyleCard(),
         SizedBox(height: 24.h),
       ],
@@ -950,7 +943,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Travel Preferences'),
+        CustomizeTripSectionTitle('Travel Preferences'),
         Container(
           height: 48.h,
           padding: EdgeInsets.symmetric(horizontal: 14.w),
@@ -999,7 +992,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
             }).toList(),
           ),
         ),
-        _buildSectionTitle(sectionTitle),
+        CustomizeTripSectionTitle(sectionTitle),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1012,13 +1005,20 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
           itemCount: _recommendedPlaces.length,
           itemBuilder: (context, index) {
             final place = _recommendedPlaces[index];
-            return _buildPlaceCard(place['name'] as String, place['category'] as String, place['rating'] as double);
+            final name = place['name'] as String;
+            final category = place['category'] as String;
+            return _buildPlaceCard(
+              name,
+              category,
+              place['rating'] as double,
+              onAdd: () => _addPlaceToItinerary(name, category),
+            );
           },
         ),
         SizedBox(height: 12.h),
         Center(
           child: TextButton(
-            onPressed: () {},
+            onPressed: () => context.pushNamed(AppRouteNames.discoverNashik),
             child: Text('View More', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: const Color(0xFFFF9820), fontFamily: 'Roboto')),
           ),
         ),
@@ -1027,7 +1027,19 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     );
   }
 
-  Widget _buildPlaceCard(String name, String category, double rating) {
+  void _addPlaceToItinerary(String name, String category) {
+    setState(() {
+      _morningPlaces.add({
+        'name': name,
+        'category': category,
+        'distance': '—',
+        'tagColor': 'purple',
+      });
+    });
+    Snackbar.showSuccess('Added "$name" to Morning');
+  }
+
+  Widget _buildPlaceCard(String name, String category, double rating, {VoidCallback? onAdd}) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.r),
@@ -1057,7 +1069,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
                     color: const Color(0xFFFF9820),
                     borderRadius: BorderRadius.circular(9999.r),
                     child: InkWell(
-                      onTap: () {},
+                      onTap: onAdd,
                       borderRadius: BorderRadius.circular(9999.r),
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
@@ -1110,7 +1122,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Plan Your Days'),
+        CustomizeTripSectionTitle('Plan Your Days'),
         SizedBox(
           height: 48.h,
           child: ListView.builder(
@@ -1168,14 +1180,29 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
           ],
         ),
         SizedBox(height: 12.h),
-        ...places.map((p) => _buildDayPlaceCard(p['name']!, p['category']!, p['distance']!, ItineraryTagColor.fromString(p['tagColor'] ?? 'purple'))),
+        ...places.map((p) {
+          final name = p['name']!;
+          final category = p['category']!;
+          return _buildDayPlaceCard(
+            name,
+            category,
+            p['distance']!,
+            ItineraryTagColor.fromString(p['tagColor'] ?? 'purple'),
+            onDelete: () {
+              setState(() {
+                final idx = places.indexWhere((e) => e['name'] == name && e['category'] == category);
+                if (idx != -1) places.removeAt(idx);
+              });
+            },
+          );
+        }),
         SizedBox(height: 8.h),
         _buildAddPlaceButton(title),
       ],
     );
   }
 
-  Widget _buildDayPlaceCard(String name, String category, String distance, ItineraryTagColor tagColorKey) {
+  Widget _buildDayPlaceCard(String name, String category, String distance, ItineraryTagColor tagColorKey, {VoidCallback? onDelete}) {
     final tagColor = _tagColorFor(tagColorKey);
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
@@ -1225,7 +1252,8 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
                 ],
               ),
             ),
-            IconButton(icon: Icon(Icons.delete_outline, size: 22.sp, color: Colors.red), onPressed: () {}),
+            IconButton(icon: Icon(Icons.delete_outline, size: 22.sp, color: Colors.red), onPressed: onDelete),
+            // Drag handle: visual only; reorder can be added later with ReorderableListView
             Icon(Icons.drag_indicator, size: 22.sp, color: const Color(0xFF9CA3AF)),
           ],
         ),
@@ -1261,7 +1289,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
       children: [
         SizedBox(height: 8.h),
         _buildPreviewTripCard(tripName, totalTravellers),
-        _buildSectionTitle('Travel Preferences'),
+        CustomizeTripSectionTitle('Travel Preferences'),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1287,7 +1315,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
             );
           }).toList(),
         ),
-        _buildSectionTitle('Day-by-Day Timeline'),
+        CustomizeTripSectionTitle('Day-by-Day Timeline'),
         SizedBox(
           height: 44.h,
           child: ListView.builder(
@@ -1325,7 +1353,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
         _buildPreviewTimeSlot('Morning', '08:00—12:00', Icons.wb_sunny_outlined, _morningPlaces),
         _buildPreviewTimeSlot('Afternoon', '12:00—17:00', Icons.wb_cloudy_outlined, _afternoonPlaces),
         _buildPreviewTimeSlot('Evening', '17:00—21:00', Icons.nightlight_round_outlined, _eveningPlaces),
-        _buildSectionTitle('Trip Summary'),
+        CustomizeTripSectionTitle('Trip Summary'),
         Row(
           children: [
             Expanded(
@@ -1357,7 +1385,7 @@ class _CustomizeTripPageState extends State<CustomizeTripPage> {
             ),
           ],
         ),
-        _buildSectionTitle('Notes & Travellers'),
+        CustomizeTripSectionTitle('Notes & Travellers'),
         Material(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),

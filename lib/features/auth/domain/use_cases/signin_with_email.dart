@@ -14,15 +14,19 @@ class SigninWithEmail implements UseCase<User, SigninWithEmailParams> {
 
   @override
   Future<Result<User>> call(SigninWithEmailParams params) async {
-    if (params.email.isEmpty) {
+    final email = params.email.trim();
+    final password = params.password.trim();
+    if (email.isEmpty) {
       return Left(ValidationFailure.missingField('email'));
     }
-    if (!params.email.contains('@')) {
+    if (!email.contains('@')) {
       return Left(ValidationFailure.invalidInput('email'));
     }
-    if (params.password.isEmpty) {
+    if (password.isEmpty) {
       return Left(ValidationFailure.missingField('password'));
     }
-    return repository.signInWithEmail(params);
+    return repository.signInWithEmail(
+      SigninWithEmailParams(email: email, password: password),
+    );
   }
 }

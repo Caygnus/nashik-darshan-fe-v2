@@ -35,7 +35,7 @@ enum DeepLinkType {
   }
 
   /// Get route path for the deep link type
-  String? getRoutePath(Uri originalUri) {
+  String getRoutePath(Uri originalUri) {
     switch (this) {
       case DeepLinkType.oauthCallback:
         // For OAuth, pass the full deep link URI as a query parameter

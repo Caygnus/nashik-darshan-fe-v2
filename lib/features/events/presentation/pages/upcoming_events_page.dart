@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:nashik/core/router/navigation/app_navigator.dart';
 
@@ -13,13 +14,18 @@ class UpcomingEventsPage extends StatefulWidget {
 }
 
 class _UpcomingEventsPageState extends State<UpcomingEventsPage> {
-  DateTime _currentMonth = DateTime(2026, 1);
-  DateTime? _selectedDate = DateTime(2026, 1, 18);
+  late DateTime _currentMonth;
+  late DateTime? _selectedDate;
 
-  /// Dates that have events (day of month) – highlighted in calendar.
-  static const Set<int> _datesWithEvents = {12, 13, 14, 15, 18};
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _currentMonth = DateTime(now.year, now.month);
+    _selectedDate = DateTime(now.year, now.month, now.day);
+  }
 
-  /// Events by date key "yyyy-MM-dd".
+  /// Events by date key "yyyy-MM-dd". Single source of truth; calendar highlights derived from this.
   static final Map<String, List<Map<String, dynamic>>> _eventsByDate = {
     '2026-01-12': [
       {'title': 'Morning Ganga Aarti', 'description': 'Daily spiritual ritual at the holy ghat.', 'time': '5:30 AM – 6:30 AM', 'location': 'Ramkund Ghat', 'eventId': 'morning-ganga-aarti'},
@@ -45,7 +51,10 @@ class _UpcomingEventsPageState extends State<UpcomingEventsPage> {
     return _eventsByDate[key] ?? [];
   }
 
-  bool _dateHasEvents(int day) => _datesWithEvents.contains(day);
+  bool _dateHasEvents(int day) {
+    final key = DateFormat('yyyy-MM-dd').format(DateTime(_currentMonth.year, _currentMonth.month, day));
+    return (_eventsByDate[key]?.isNotEmpty ?? false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +65,7 @@ class _UpcomingEventsPageState extends State<UpcomingEventsPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF1F2937)),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           'Upcoming Events',

@@ -18,6 +18,9 @@ class CulturePlaceDetailTemplate extends StatefulWidget {
 }
 
 class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate> {
+  /// Height of the sticky nav bar (logical px); used for active-section threshold.
+  static const double _stickyNavHeight = 61.0;
+
   final ScrollController _scrollController = ScrollController();
   final ScrollController _navScrollController = ScrollController();
   final ScrollController _nearbyPlacesScrollController = ScrollController();
@@ -26,11 +29,11 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
   final Map<int, GlobalKey> _sectionKeys = {};
   bool _isScrollingToSection = false;
 
-  final List<String> _sections = [
-    'About Goda Park',
-    'How To Reach',
-    'Things',
-  ];
+  List<String> get _sections => [
+        'About ${widget.place.name}',
+        'How To Reach',
+        'Things',
+      ];
 
   @override
   void initState() {
@@ -70,9 +73,7 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
         _showStickyNav = shouldShowNav;
       });
     }
-    
-    final threshold = 61.0;
-    
+
     int? newActiveIndex;
     double minDistance = double.infinity;
     
@@ -85,12 +86,12 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
           final sectionTop = position.dy;
           final sectionBottom = sectionTop + renderBox.size.height;
           
-          if (sectionTop <= threshold && sectionBottom >= threshold) {
+          if (sectionTop <= _stickyNavHeight && sectionBottom >= _stickyNavHeight) {
             newActiveIndex = i;
             break;
           }
-          
-          final distance = (sectionTop - threshold).abs();
+
+          final distance = (sectionTop - _stickyNavHeight).abs();
           if (distance < minDistance) {
             minDistance = distance;
             newActiveIndex = i;
@@ -129,111 +130,102 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
 
   void _scrollToSection(int index) {
     final key = _sectionKeys[index];
-    if (key?.currentContext != null) {
-      _isScrollingToSection = true;
-      
-      setState(() {
-        _activeSectionIndex = index;
-      });
-      
-      final stickyNavHeight = 61.0;
-      
-      if (!_showStickyNav) {
-        setState(() {
-          _showStickyNav = true;
-        });
-      }
-      
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final context = key?.currentContext;
-        if (context != null && _scrollController.hasClients) {
-          final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-          if (renderBox != null) {
-            final scrollable = Scrollable.of(context);
-            final scrollablePosition = scrollable.position;
-            final scrollableRenderObject = scrollablePosition.context.storageContext.findRenderObject();
-            if (scrollableRenderObject != null) {
-              final scrollableBox = scrollableRenderObject as RenderBox;
-              
-              final sectionTop = renderBox.localToGlobal(Offset.zero, ancestor: scrollableBox).dy;
-              
-              final currentScrollOffset = scrollablePosition.pixels;
-              final sectionAbsolutePosition = currentScrollOffset + sectionTop;
-              final targetOffset = sectionAbsolutePosition - stickyNavHeight;
-              
-              scrollablePosition.animateTo(
-                targetOffset.clamp(0.0, scrollablePosition.maxScrollExtent),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              ).then((_) {
-                Future.delayed(const Duration(milliseconds: 200), () {
-                  if (mounted) {
-                    setState(() {
-                      _isScrollingToSection = false;
-                    });
-                  }
-                });
-              });
-              return;
-            }
-          }
-        }
-        
-        if (key?.currentContext != null) {
-          Scrollable.ensureVisible(
-            key!.currentContext!,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: 0.0,
-            alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-          ).then((_) {
-            if (_scrollController.hasClients && _showStickyNav) {
-              Future.delayed(const Duration(milliseconds: 100), () {
-                if (_scrollController.hasClients && mounted) {
-                  final currentOffset = _scrollController.offset;
-                  final adjustedOffset = currentOffset + stickyNavHeight;
-                  _scrollController.animateTo(
-                    adjustedOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                  ).then((_) {
-                    Future.delayed(const Duration(milliseconds: 200), () {
-                      if (mounted) {
-                        setState(() {
-                          _isScrollingToSection = false;
-                        });
-                      }
-                    });
-                  });
-                } else {
-                  if (mounted) {
-                    setState(() {
-                      _isScrollingToSection = false;
-                    });
-                  }
-                }
-              });
-            } else {
-              Future.delayed(const Duration(milliseconds: 400), () {
-                if (mounted) {
-                  setState(() {
-                    _isScrollingToSection = false;
-                  });
-                }
-              });
-            }
-          });
-        } else {
-          if (mounted) {
-            setState(() {
-              _isScrollingToSection = false;
-            });
-          }
-        }
-      });
-      
-      _scrollNavToActiveTab(index);
+    if (key?.currentContext == null) return;
+
+    _isScrollingToSection = true;
+    setState(() => _activeSectionIndex = index);
+    if (!_showStickyNav) {
+      setState(() => _showStickyNav = true);
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sectionKey = _sectionKeys[index];
+      if (sectionKey == null) {
+        _resetScrollingToSectionAfterDelay(0);
+        return;
+      }
+      if (_tryPrimaryScrollToSection(sectionKey)) return;
+      _runEnsureVisibleFallback(sectionKey);
+    });
+
+    _scrollNavToActiveTab(index);
+  }
+
+  /// Primary strategy: compute target offset from Scrollable and animate.
+  /// Returns true if scroll was started (caller need not run fallback).
+  bool _tryPrimaryScrollToSection(GlobalKey key) {
+    final context = key.currentContext;
+    if (context == null || !_scrollController.hasClients) return false;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return false;
+    final scrollable = Scrollable.of(context);
+    final scrollablePosition = scrollable.position;
+    final scrollableRenderObject =
+        scrollablePosition.context.storageContext.findRenderObject();
+    if (scrollableRenderObject == null) return false;
+    final scrollableBox = scrollableRenderObject as RenderBox;
+    final sectionTop =
+        renderBox.localToGlobal(Offset.zero, ancestor: scrollableBox).dy;
+    final currentScrollOffset = scrollablePosition.pixels;
+    final sectionAbsolutePosition = currentScrollOffset + sectionTop;
+    final targetOffset = sectionAbsolutePosition - _stickyNavHeight;
+    scrollablePosition
+        .animateTo(
+          targetOffset.clamp(0.0, scrollablePosition.maxScrollExtent),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        )
+        .then((_) => _resetScrollingToSectionAfterDelay(200));
+    return true;
+  }
+
+  /// Fallback: ensureVisible then adjust for sticky nav so section sits below the bar.
+  void _runEnsureVisibleFallback(GlobalKey key) {
+    final context = key.currentContext;
+    if (context == null) {
+      _resetScrollingToSectionAfterDelay(0);
+      return;
+    }
+    Scrollable.ensureVisible(
+      context,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      alignment: 0.0,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    ).then((_) {
+      if (_scrollController.hasClients && _showStickyNav) {
+        _adjustScrollForStickyNavAfterEnsureVisible();
+      } else {
+        _resetScrollingToSectionAfterDelay(400);
+      }
+    });
+  }
+
+  void _adjustScrollForStickyNavAfterEnsureVisible() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!_scrollController.hasClients || !mounted) {
+        _resetScrollingToSectionAfterDelay(0);
+        return;
+      }
+      final currentOffset = _scrollController.offset;
+      final adjustedOffset = currentOffset - _stickyNavHeight;
+      _scrollController
+          .animateTo(
+            adjustedOffset.clamp(
+              0.0,
+              _scrollController.position.maxScrollExtent,
+            ),
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+          )
+          .then((_) => _resetScrollingToSectionAfterDelay(200));
+    });
+  }
+
+  void _resetScrollingToSectionAfterDelay(int milliseconds) {
+    Future.delayed(Duration(milliseconds: milliseconds), () {
+      if (mounted) setState(() => _isScrollingToSection = false);
+    });
   }
 
   TextStyle _getTextStyle({
@@ -467,13 +459,12 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
   }
 
   Widget _buildNavigationTab(String title, bool isActive, int index) {
-    return Container(
-      child: InkWell(
-        onTap: () {
-          _scrollToSection(index);
-        },
-        borderRadius: BorderRadius.circular(9999.r),
-        child: Container(
+    return InkWell(
+      onTap: () {
+        _scrollToSection(index);
+      },
+      borderRadius: BorderRadius.circular(9999.r),
+      child: Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
             color: isActive
@@ -499,7 +490,6 @@ class _CulturePlaceDetailTemplateState extends State<CulturePlaceDetailTemplate>
             ),
           ),
         ),
-      ),
     );
   }
 

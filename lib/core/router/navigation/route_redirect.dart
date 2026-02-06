@@ -20,8 +20,9 @@ class RouteRedirect {
     final path = uri.path;
     final scheme = uri.scheme;
 
+    // Log path/scheme only; do not log full URI (may contain OAuth codes/tokens in query)
     debugPrint(
-      '🔍 Redirect check: path=$path, scheme="$scheme", fullUri=${uri.toString()}',
+      '🔍 Redirect check: path=$path, scheme="$scheme"',
     );
 
     // Handle deep links with custom scheme

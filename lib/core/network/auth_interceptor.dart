@@ -25,22 +25,27 @@ class AuthInterceptor extends Interceptor {
     handler.next(options);
   }
 
+  /// Handles 401 when it is delivered as a response (e.g. if validateStatus
+  /// accepts 401). When 401 is treated as an error, [onError] runs instead.
   @override
-  void onResponse(
+  Future<void> onResponse(
     Response response,
     ResponseInterceptorHandler handler,
-  ) {
+  ) async {
     if (response.statusCode == 401) {
-      _tokenStorage.deleteAccessToken();
+      await _tokenStorage.deleteAccessToken();
       _onUnauthorized?.call();
     }
     handler.next(response);
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     if (err.response?.statusCode == 401) {
-      _tokenStorage.deleteAccessToken();
+      await _tokenStorage.deleteAccessToken();
       _onUnauthorized?.call();
     }
     handler.next(err);

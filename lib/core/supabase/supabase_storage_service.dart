@@ -24,7 +24,9 @@ class SupabaseStorageService {
 
   static SupabaseClient get _client => SupabaseConfig.client;
 
-  /// Upload [file] to [bucket] at [path]. Returns public URL for public bucket.
+  /// Upload [file] to [bucket] at [path].
+  /// Returns the storage [path]. For public buckets use [getPublicUrl] to get a
+  /// URL; for private buckets use [createSignedUrl].
   static Future<String> uploadFile({
     required String bucket,
     required String path,
@@ -38,9 +40,8 @@ class SupabaseStorageService {
             file,
             fileOptions: options ?? const FileOptions(upsert: true),
           );
-      final url = _client.storage.from(bucket).getPublicUrl(path);
       SupabaseLogger.storage('Upload success: $path', bucket: bucket);
-      return url;
+      return path;
     } catch (e) {
       SupabaseLogger.error('Storage upload $bucket/$path failed', e);
       rethrow;
@@ -48,6 +49,8 @@ class SupabaseStorageService {
   }
 
   /// Upload bytes to [bucket] at [path].
+  /// Returns the storage [path]. For public buckets use [getPublicUrl] to get a
+  /// URL; for private buckets use [createSignedUrl].
   static Future<String> uploadBytes({
     required String bucket,
     required String path,
@@ -61,9 +64,8 @@ class SupabaseStorageService {
             Uint8List.fromList(bytes),
             fileOptions: options ?? const FileOptions(upsert: true),
           );
-      final url = _client.storage.from(bucket).getPublicUrl(path);
       SupabaseLogger.storage('Upload bytes success: $path', bucket: bucket);
-      return url;
+      return path;
     } catch (e) {
       SupabaseLogger.error('Storage upload bytes $bucket/$path failed', e);
       rethrow;

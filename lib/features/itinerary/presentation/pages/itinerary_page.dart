@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/utils/snackbar.dart';
 
 /// Itinerary Page
 /// Main page for planning and viewing itineraries
@@ -129,7 +130,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
       height: 280.h, // Increased from 200.h
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/home-hero.png'),
+          image: const AssetImage('assets/images/home-hero.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -302,7 +303,9 @@ class _ItineraryPageState extends State<ItineraryPage> {
               color: const Color(0xFFF97316),
               borderRadius: BorderRadius.circular(12.r),
               child: InkWell(
-                onTap: () {},
+                onTap: () {
+                  // TODO: Navigate to festival itineraries when route/screen is available
+                },
                 borderRadius: BorderRadius.circular(12.r),
                 child: Center(
                   child: Text(
@@ -406,7 +409,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {},
+            onTap: () => Snackbar.showInfo('Add review coming soon'),
             borderRadius: BorderRadius.circular(8.r),
             child: Center(
               child: Text(
@@ -522,7 +525,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
               ),
               const Spacer(),
               GestureDetector(
-                onTap: () {},
+                onTap: () => context.pushNamed(AppRouteNames.customizeTrip),
                 child: Text(
                   'Use Plan',
                   style: TextStyle(
@@ -551,9 +554,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
             iconBackgroundColor: const Color(0xFFF3E8FF), // Light lavender purple
             title: 'Share Plans',
             subtitle: 'WhatsApp ready format',
-            onTap: () {
-              // TODO: Implement share functionality
-            },
+            onTap: () => Snackbar.showInfo('Share plans coming soon'),
           ),
         ),
         SizedBox(width: 12.w),
@@ -565,9 +566,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
             iconBackgroundColor: const Color(0xFFD1FAE5), // Light pastel green
             title: 'Customize',
             subtitle: 'Add/remove places',
-            onTap: () {
-              // TODO: Implement customize functionality
-            },
+            onTap: () => context.pushNamed(AppRouteNames.customizeTrip),
           ),
         ),
       ],
@@ -946,61 +945,59 @@ class _ItineraryPageState extends State<ItineraryPage> {
   }
 
   Widget _buildFilterItem(String label, String value) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF6B7280),
-              fontFamily: 'Roboto',
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF6B7280),
+            fontFamily: 'Roboto',
           ),
-          SizedBox(height: 4.h),
-          Container(
-            width: double.infinity,
-            height: 36.h,
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                icon: Icon(Icons.arrow_drop_down, size: 18.sp, color: const Color(0xFF6B7280)),
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF1F2937),
-                  fontFamily: 'Roboto',
-                ),
-                items: _getFilterItems(label).map((String item) {
-                  return DropdownMenuItem<String>(
-                    value: item,
-                    child: Text(item),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    if (label == 'Duration') {
-                      _selectedDuration = newValue!;
-                    } else if (label == 'Type') {
-                      _selectedType = newValue!;
-                    }
-                  });
-                },
+        ),
+        SizedBox(height: 4.h),
+        Container(
+          width: double.infinity,
+          height: 36.h,
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              icon: Icon(Icons.arrow_drop_down, size: 18.sp, color: const Color(0xFF6B7280)),
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF1F2937),
+                fontFamily: 'Roboto',
               ),
+              items: _getFilterItems(label).map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(item),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  if (label == 'Duration') {
+                    _selectedDuration = newValue!;
+                  } else if (label == 'Type') {
+                    _selectedType = newValue!;
+                  }
+                });
+              },
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

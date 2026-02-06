@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/storage/login_preferences.dart';
 import 'package:nashik/core/theme/colors.dart';
 import 'package:nashik/core/utils/loading_overlay.dart';
 import 'package:nashik/core/utils/snackbar.dart';
@@ -26,6 +28,25 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedLoginPreferences();
+  }
+
+  Future<void> _loadSavedLoginPreferences() async {
+    final prefs = locator<LoginPreferences>();
+    final rememberMe = await prefs.getRememberMe();
+    final savedEmail = await prefs.getSavedEmail();
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = rememberMe;
+      if (savedEmail != null && savedEmail.isNotEmpty) {
+        _emailController.text = savedEmail;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -34,10 +55,22 @@ class _LoginPageState extends State<LoginPage> {
 
   void _handleSignIn() {
     if (_formKey.currentState!.validate()) {
+      final email = _emailController.text.trim();
+      _persistRememberMe(email);
       context.read<AuthCubit>().signInWithEmail(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text,
       );
+    }
+  }
+
+  Future<void> _persistRememberMe(String email) async {
+    final prefs = locator<LoginPreferences>();
+    await prefs.setRememberMe(_rememberMe);
+    if (_rememberMe) {
+      await prefs.setSavedEmail(email);
+    } else {
+      await prefs.setSavedEmail(null);
     }
   }
 

@@ -22,6 +22,9 @@ class NaturePlaceDetailTemplate extends StatefulWidget {
 }
 
 class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
+  /// Scaled height of the sticky nav bar; used for show-nav threshold and section detection.
+  double get _stickyNavHeight => 61.h;
+
   final ScrollController _scrollController = ScrollController();
   final ScrollController _navScrollController = ScrollController();
   int _activeSectionIndex = 0;
@@ -71,12 +74,11 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
     final scrollOffset = _scrollController.offset;
     final imageSectionHeight = 400.h;
     final overlapHeight = 20.h;
-    final navBarHeight = 61.h;
-    final shouldShowNav = scrollOffset > (imageSectionHeight - overlapHeight - navBarHeight);
+    final shouldShowNav =
+        scrollOffset > (imageSectionHeight - overlapHeight - _stickyNavHeight);
     if (_showStickyNav != shouldShowNav) {
       setState(() => _showStickyNav = shouldShowNav);
     }
-    const threshold = 61.0;
     int? newActiveIndex;
     double minDistance = double.infinity;
     for (int i = 0; i < _sections.length; i++) {
@@ -87,11 +89,11 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
           final position = renderBox.localToGlobal(Offset.zero);
           final sectionTop = position.dy;
           final sectionBottom = sectionTop + renderBox.size.height;
-          if (sectionTop <= threshold && sectionBottom >= threshold) {
+          if (sectionTop <= _stickyNavHeight && sectionBottom >= _stickyNavHeight) {
             newActiveIndex = i;
             break;
           }
-          final distance = (sectionTop - threshold).abs();
+          final distance = (sectionTop - _stickyNavHeight).abs();
           if (distance < minDistance) {
             minDistance = distance;
             newActiveIndex = i;
@@ -127,7 +129,6 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
     if (key?.currentContext != null) {
       _isScrollingToSection = true;
       setState(() => _activeSectionIndex = index);
-      const stickyNavHeight = 61.0;
       if (!_showStickyNav) setState(() => _showStickyNav = true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = key?.currentContext;
@@ -142,7 +143,7 @@ class _NaturePlaceDetailTemplateState extends State<NaturePlaceDetailTemplate> {
               final sectionTop = renderBox.localToGlobal(Offset.zero, ancestor: scrollableBox).dy;
               final currentScrollOffset = scrollablePosition.pixels;
               final sectionAbsolutePosition = currentScrollOffset + sectionTop;
-              final targetOffset = sectionAbsolutePosition - stickyNavHeight;
+              final targetOffset = sectionAbsolutePosition - _stickyNavHeight;
               scrollablePosition.animateTo(
                 targetOffset.clamp(0.0, scrollablePosition.maxScrollExtent),
                 duration: const Duration(milliseconds: 300),

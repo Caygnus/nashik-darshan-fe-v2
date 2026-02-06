@@ -50,10 +50,10 @@ class AuthCubit extends Cubit<AuthState> {
     return super.close();
   }
 
-  /// Initializes auth state from current user. Does not yet subscribe to
-  /// Supabase auth.onAuthStateChange. Add that listener before production so
-  /// session persistence, OAuth callbacks, and sign-out from other sources
-  /// are handled. (Track re-enable in a GitHub issue to avoid shipping without it.)
+  /// Initializes auth state from current user.
+  /// TODO(github): Subscribe to Supabase auth.onAuthStateChange before production
+  /// so session persistence, OAuth callbacks, and sign-out from other sources
+  /// are handled. Track in a GitHub issue and link it here.
   void _initializeAuthState() async {
     final result = await _getCurrentUser();
     result.fold(

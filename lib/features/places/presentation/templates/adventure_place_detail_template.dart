@@ -219,7 +219,7 @@ class _AdventurePlaceDetailTemplateState extends State<AdventurePlaceDetailTempl
               Future.delayed(const Duration(milliseconds: 100), () {
                 if (_scrollController.hasClients && mounted) {
                   final currentOffset = _scrollController.offset;
-                  final adjustedOffset = currentOffset + stickyNavHeight;
+                  final adjustedOffset = currentOffset - stickyNavHeight;
                   _scrollController.animateTo(
                     adjustedOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
                     duration: const Duration(milliseconds: 200),

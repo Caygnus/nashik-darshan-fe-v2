@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/router/navigation/route_redirect.dart';
@@ -8,8 +9,9 @@ import 'package:nashik/core/router/routes/main_tab_routes.dart';
 import 'package:nashik/core/router/routes/utility_routes.dart';
 import 'package:nashik/features/home/presentation/pages/home_screen.dart';
 
-/// Route observer for navigation tracking
-class RouteObserver extends NavigatorObserver {}
+/// App-level route observer for navigation tracking.
+/// Named to avoid shadowing Flutter's [RouteObserver] from material.dart.
+class AppRouteObserver extends NavigatorObserver {}
 
 /// Main application router configuration
 /// 
@@ -25,7 +27,7 @@ class AppRouter {
   static late final GoRouter router;
 
   // Route observer
-  static final RouteObserver _routeObserver = RouteObserver();
+  static final AppRouteObserver _routeObserver = AppRouteObserver();
 
   // Navigator keys for different navigation contexts
   static final GlobalKey<NavigatorState> parentNavigatorKey =
@@ -69,7 +71,7 @@ class AppRouter {
       routes: routes,
       redirect: RouteRedirect.handleRedirect,
       observers: [_routeObserver],
-      debugLogDiagnostics: true, // Enable debug logging to diagnose routing issues
+      debugLogDiagnostics: kDebugMode,
     );
   }
 
@@ -101,10 +103,4 @@ extension GoRouterExtension on GoRouter {
     final String location = matchList.uri.toString();
     return location;
   }
-
-  /// Stream of location changes
-  Stream<String> get locationStream =>
-      Stream<String>.periodic(const Duration(seconds: 1), (computationCount) {
-        return AppRouter.router.location;
-      });
 }

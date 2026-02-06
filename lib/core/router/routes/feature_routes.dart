@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/app_router.dart';
@@ -69,8 +70,14 @@ class FeatureRoutes {
         path: AppRoutePaths.itineraryDetail,
         name: AppRouteNames.itineraryDetail,
         pageBuilder: (context, state) {
-          final itineraryId = state.pathParameters['itineraryId'] ?? '';
+          final itineraryId = state.pathParameters['itineraryId']?.trim() ?? '';
           final title = state.uri.queryParameters['title'] ?? 'Itinerary';
+          if (itineraryId.isEmpty) {
+            return AppRouter.getPage(
+              child: const _RedirectToItineraryList(),
+              state: state,
+            );
+          }
           return AppRouter.getPage(
             child: ItineraryDetailPage(
               itineraryId: itineraryId,
@@ -171,7 +178,13 @@ class FeatureRoutes {
         path: AppRoutePaths.categoryDetail,
         name: AppRouteNames.categoryDetail,
         pageBuilder: (context, state) {
-          final categoryId = state.pathParameters['categoryId'] ?? '';
+          final categoryId = state.pathParameters['categoryId']?.trim() ?? '';
+          if (categoryId.isEmpty) {
+            return AppRouter.getPage(
+              child: const _RedirectToPath(targetPath: AppRoutePaths.category),
+              state: state,
+            );
+          }
           return AppRouter.getPage(
             child: CategoryDetailPage(
               categoryId: categoryId,
@@ -185,7 +198,13 @@ class FeatureRoutes {
         path: AppRoutePaths.placeDetail,
         name: AppRouteNames.placeDetail,
         pageBuilder: (context, state) {
-          final placeId = state.pathParameters['placeId'] ?? '';
+          final placeId = state.pathParameters['placeId']?.trim() ?? '';
+          if (placeId.isEmpty) {
+            return AppRouter.getPage(
+              child: const _RedirectToPath(targetPath: AppRoutePaths.home),
+              state: state,
+            );
+          }
           return AppRouter.getPage(
             child: PlaceDetailPage(
               placeId: placeId,
@@ -196,6 +215,7 @@ class FeatureRoutes {
         },
       ),
       // Events Routes
+      // eventId from path (required); eventTitle from query (optional display label)
       GoRoute(
         path: AppRoutePaths.eventDetail,
         name: AppRouteNames.eventDetail,
@@ -229,4 +249,50 @@ class FeatureRoutes {
       ),
     ];
   }
+}
+
+/// One-time redirect when itinerary detail is opened with missing/empty [itineraryId].
+class _RedirectToItineraryList extends StatefulWidget {
+  const _RedirectToItineraryList();
+
+  @override
+  State<_RedirectToItineraryList> createState() => _RedirectToItineraryListState();
+}
+
+class _RedirectToItineraryListState extends State<_RedirectToItineraryList> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go(AppRoutePaths.itinerary);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Center(child: CircularProgressIndicator());
+}
+
+/// One-time redirect when a required path parameter is missing (e.g. categoryId, placeId).
+class _RedirectToPath extends StatefulWidget {
+  const _RedirectToPath({required this.targetPath});
+
+  final String targetPath;
+
+  @override
+  State<_RedirectToPath> createState() => _RedirectToPathState();
+}
+
+class _RedirectToPathState extends State<_RedirectToPath> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go(widget.targetPath);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Center(child: CircularProgressIndicator());
 }

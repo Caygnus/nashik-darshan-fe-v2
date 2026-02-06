@@ -19,7 +19,7 @@ See `.env.example` and `docs/ENV_SETUP.md`.
 
 ## 3. Authentication
 
-- **Email/Password**: Sign up, sign in, password reset, email verification (OTP) are implemented in the auth data layer and use Supabase Auth.
+- **Email/Password**: Sign-up, sign-in, password reset, email verification (OTP) are implemented in the auth data layer and use Supabase Auth.
 - **Google OAuth**: `signInWithOAuth(Google)` with redirect; session is created when the app handles the deep link.
 
 **Redirect URL (single, consistent):**
@@ -54,7 +54,7 @@ See `.env.example` and `docs/ENV_SETUP.md`.
 ## 8. Error Handling & Logging
 
 - **SupabaseLogger** (`lib/core/supabase/supabase_logger.dart`): init, auth, OAuth, storage, DB, and error logging.
-- Auth datasource logs sign up/in, Google OAuth, sign out, and OAuth callback success/failure.
+- Auth datasource logs sign-up/sign-in, Google OAuth, sign-out, and OAuth callback success/failure.
 - Failures throw with clear messages; UI shows user-facing errors.
 
 ## 9. Clean Architecture

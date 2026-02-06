@@ -129,8 +129,11 @@ class PlaceRepositoryImpl extends BaseRepository implements PlaceRepository {
 
   @override
   Future<List<Place>> searchPlaces(String query) async {
-    // Search places from centralized mock data source
-    return PlacesMockDataSource.searchPlaces(query)
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      return <Place>[];
+    }
+    return PlacesMockDataSource.searchPlaces(trimmed)
         .map((model) => model.toEntity())
         .toList();
   }

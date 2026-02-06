@@ -28,21 +28,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0.0;
+  final ValueNotifier<double> _scrollOffset = ValueNotifier(0.0);
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      setState(() {
-        _scrollOffset = _scrollController.offset;
-      });
+      _scrollOffset.value = _scrollController.offset;
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -106,8 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        // Transparent AppBar overlay
-        TransparentAppBarWidget(scrollOffset: _scrollOffset),
+        // Transparent AppBar overlay (ValueListenableBuilder avoids rebuilding full screen on scroll)
+        ValueListenableBuilder<double>(
+          valueListenable: _scrollOffset,
+          builder: (context, offset, _) => TransparentAppBarWidget(scrollOffset: offset),
+        ),
       ],
     );
   }

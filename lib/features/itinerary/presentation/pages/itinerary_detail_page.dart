@@ -21,8 +21,10 @@ class ItineraryDetailPage extends StatefulWidget {
 
 class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
   int _selectedDayIndex = 0;
+  // TODO: Replace with data loaded by widget.itineraryId when itinerary API/repository is available
   final List<String> _dayLabels = ['Day 1', 'Day 2', 'Day 3', 'Day 4'];
   final List<String> _dayDates = ['15 Jan', '16 Jan', '17 Jan', '18 Jan'];
+  /// Activity title → user note. TODO: Persist and load with itinerary data.
   final Map<String, String> _notesByActivity = {};
 
   void _showNoteDialog(BuildContext context, {required String activityTitle}) {
@@ -248,7 +250,7 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
               color: const Color(0xFFFF9820),
               borderRadius: BorderRadius.circular(12.r),
               child: InkWell(
-                onTap: () {},
+                onTap: () => context.pushNamed(AppRouteNames.customizeTrip),
                 borderRadius: BorderRadius.circular(12.r),
                 child: Center(
                   child: Text(
@@ -622,6 +624,7 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
                           color: const Color(0xFF2563EB),
                           borderRadius: BorderRadius.circular(8.r),
                           child: InkWell(
+                            // TODO: Open map/directions (e.g. Google Maps) for activity location
                             onTap: () {},
                             borderRadius: BorderRadius.circular(8.r),
                             child: Row(

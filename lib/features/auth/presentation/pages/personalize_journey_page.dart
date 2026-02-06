@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/storage/personalization_preferences.dart';
 import 'package:nashik/core/theme/colors.dart';
 
 /// Traveler type option for personalization.
@@ -40,8 +42,33 @@ class _PersonalizeJourneyPageState extends State<PersonalizeJourneyPage> {
   String _selectedLanguage = _languages.first;
   String? _selectedTravelerTypeId;
 
-  void _onStartJourney() {
-    // TODO: Persist _selectedLanguage and _selectedTravelerTypeId (e.g. SharedPreferences or user profile)
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedPreferences();
+  }
+
+  Future<void> _loadSavedPreferences() async {
+    final prefs = locator<PersonalizationPreferences>();
+    final savedLanguage = await prefs.getPreferredLanguage();
+    final savedTravelerTypeId = await prefs.getTravelerTypeId();
+    if (!mounted) return;
+    setState(() {
+      if (savedLanguage != null && _languages.contains(savedLanguage)) {
+        _selectedLanguage = savedLanguage;
+      }
+      if (savedTravelerTypeId != null &&
+          _travelerTypes.any((t) => t.id == savedTravelerTypeId)) {
+        _selectedTravelerTypeId = savedTravelerTypeId;
+      }
+    });
+  }
+
+  Future<void> _onStartJourney() async {
+    final prefs = locator<PersonalizationPreferences>();
+    await prefs.setPreferredLanguage(_selectedLanguage);
+    await prefs.setTravelerTypeId(_selectedTravelerTypeId);
+    if (!mounted) return;
     context.goNamed(AppRouteNames.home);
   }
 

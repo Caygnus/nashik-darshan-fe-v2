@@ -3,6 +3,8 @@ import 'package:get_it/get_it.dart';
 import 'package:nashik/core/auth/unauthorized_notifier.dart';
 import 'package:nashik/core/dio/config.dart';
 import 'package:nashik/core/network/api_client.dart';
+import 'package:nashik/core/storage/login_preferences.dart';
+import 'package:nashik/core/storage/personalization_preferences.dart';
 import 'package:nashik/core/storage/secure_token_storage.dart';
 import 'package:nashik/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:nashik/features/auth/data/datasources/auth_supabase_datasource.dart';
@@ -49,6 +51,14 @@ Future<void> serviceLocatorInit() async {
   // ===== CORE: Token storage & API client =====
   locator.registerLazySingleton<SecureTokenStorage>(
     () => SecureTokenStorageImpl(storage: locator<FlutterSecureStorage>()),
+  );
+
+  locator.registerLazySingleton<LoginPreferences>(
+    () => LoginPreferencesImpl(storage: locator<FlutterSecureStorage>()),
+  );
+
+  locator.registerLazySingleton<PersonalizationPreferences>(
+    () => PersonalizationPreferencesImpl(storage: locator<FlutterSecureStorage>()),
   );
 
   locator.registerLazySingleton<UnauthorizedNotifier>(

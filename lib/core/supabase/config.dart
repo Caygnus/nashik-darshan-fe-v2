@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,6 +15,44 @@ class SupabaseConfig {
 
   /// Reject any key that looks like service_role (security: never in client)
   static const String _serviceRoleHint = 'service_role';
+
+  static const String _serviceRoleError =
+      'SUPABASE_PUBLISHABLE_KEY must be the anon (public) key. '
+      'Never use service_role in client apps.';
+
+  /// Validates that [key] is not the service_role key. Decodes JWT payload and
+  /// checks the role claim; falls back to substring check if decoding fails.
+  static void _assertNotServiceRoleKey(String key) {
+    final role = _tryGetJwtRole(key);
+    if (role == 'service_role') {
+      throw Exception(_serviceRoleError);
+    }
+    if (role == null && key.toLowerCase().contains(_serviceRoleHint)) {
+      throw Exception(_serviceRoleError);
+    }
+  }
+
+  /// Decodes JWT payload and returns the "role" claim, or null if not a JWT / decode fails.
+  static String? _tryGetJwtRole(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      var payload = parts[1];
+      switch (payload.length % 4) {
+        case 2:
+          payload += '==';
+          break;
+        case 3:
+          payload += '=';
+          break;
+      }
+      final decoded = utf8.decode(base64Url.decode(payload));
+      final map = jsonDecode(decoded) as Map<String, dynamic>;
+      return map['role'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
 
   // Singleton instance
   static SupabaseConfig? _instance;
@@ -50,12 +89,7 @@ class SupabaseConfig {
         );
       }
 
-      if (supabaseAnonKey.toLowerCase().contains(_serviceRoleHint)) {
-        throw Exception(
-          'SUPABASE_PUBLISHABLE_KEY must be the anon (public) key. '
-          'Never use service_role in client apps.',
-        );
-      }
+      _assertNotServiceRoleKey(supabaseAnonKey);
 
       developer.log('Supabase: initializing with PKCE auth flow');
       await Supabase.initialize(

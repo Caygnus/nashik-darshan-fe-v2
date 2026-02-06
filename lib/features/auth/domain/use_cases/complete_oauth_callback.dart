@@ -5,12 +5,12 @@ import 'package:nashik/features/auth/domain/repositories/auth_repository.dart';
 
 /// Use case: complete OAuth callback from deep link. Creates session, ensures user in backend, returns user.
 class CompleteOAuthCallback implements UseCase<User, Uri> {
-  CompleteOAuthCallback({required this.repository});
+  CompleteOAuthCallback({required AuthRepository repository}) : _repository = repository;
 
-  final AuthRepository repository;
+  final AuthRepository _repository;
 
   @override
   Future<Result<User>> call(Uri deepLinkUri) async {
-    return repository.completeOAuthCallback(deepLinkUri);
+    return _repository.completeOAuthCallback(deepLinkUri);
   }
 }

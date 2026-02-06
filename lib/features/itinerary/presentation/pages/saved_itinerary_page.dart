@@ -575,6 +575,7 @@ class _SavedItineraryPageState extends State<SavedItineraryPage> {
                           color: const Color(0xFF2563EB),
                           borderRadius: BorderRadius.circular(8.r),
                           child: InkWell(
+                            // TODO: Open map/directions (e.g. Google Maps) for activity location
                             onTap: () {},
                             borderRadius: BorderRadius.circular(8.r),
                             child: Row(
@@ -628,6 +629,7 @@ class _SavedItineraryPageState extends State<SavedItineraryPage> {
           width: double.infinity,
           height: 48.h,
           child: OutlinedButton.icon(
+            // TODO: Duplicate itinerary (copy and save as new)
             onPressed: () {},
             icon: Icon(Icons.copy, size: 20.sp, color: const Color(0xFF6B7280)),
             label: Text(
@@ -646,6 +648,7 @@ class _SavedItineraryPageState extends State<SavedItineraryPage> {
           width: double.infinity,
           height: 48.h,
           child: OutlinedButton.icon(
+            // TODO: Delete itinerary with confirmation dialog
             onPressed: () {},
             icon: Icon(Icons.delete_outline, size: 20.sp, color: const Color(0xFFDC2626)),
             label: Text(

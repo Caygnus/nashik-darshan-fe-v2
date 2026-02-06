@@ -24,8 +24,11 @@ class Place {
     this.longitude,
     this.openingHours,
     this.contactInfo,
-    this.additionalInfo,
-  }) : imageUrls = List.unmodifiable(List.from(imageUrls));
+    Map<String, dynamic>? additionalInfo,
+  })  : imageUrls = List.unmodifiable(List.from(imageUrls)),
+        additionalInfo = additionalInfo == null
+            ? null
+            : Map.unmodifiable(Map<String, dynamic>.from(additionalInfo));
 
   @override
   bool operator ==(Object other) =>

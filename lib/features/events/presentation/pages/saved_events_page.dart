@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Saved Events Page
@@ -15,13 +16,17 @@ class _SavedEventsPageState extends State<SavedEventsPage> {
   int _selectedDateIndex = 0;
   final Map<String, bool> _expandedBlocks = {'Morning': true, 'Afternoon': true, 'Evening': true};
 
-  static final List<Map<String, dynamic>> _dateTabs = [
-    {'label': 'Today', 'day': '12', 'month': 'Jan'},
-    {'label': 'Tomorrow', 'day': '13', 'month': 'Jan'},
-    {'label': 'Sunday', 'day': '14', 'month': 'Jan'},
-    {'label': 'Mon', 'day': '15', 'month': 'Jan'},
-    {'label': 'Tue', 'day': '16', 'month': 'Jan'},
-  ];
+  static const _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  static const _weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  List<Map<String, dynamic>> get _dateTabs {
+    final now = DateTime.now();
+    return List.generate(5, (offset) {
+      final d = DateTime(now.year, now.month, now.day).add(Duration(days: offset));
+      final label = offset == 0 ? 'Today' : offset == 1 ? 'Tomorrow' : _weekdayNames[d.weekday - 1];
+      return {'label': label, 'day': '${d.day}', 'month': _monthNames[d.month - 1]};
+    });
+  }
 
   static final List<Map<String, dynamic>> _morningEvents = [
     {
@@ -100,7 +105,7 @@ class _SavedEventsPageState extends State<SavedEventsPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF1F2937)),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           'Events',

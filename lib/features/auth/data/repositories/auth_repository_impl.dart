@@ -119,7 +119,8 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
   @override
   Future<Result<bool>> signInWithGoogle() async {
     return executeWithErrorHandling<bool>(() async {
-      return await supabaseDataSource.signInWithGoogle();
+      await supabaseDataSource.signInWithGoogle();
+      return true;
     });
   }
 

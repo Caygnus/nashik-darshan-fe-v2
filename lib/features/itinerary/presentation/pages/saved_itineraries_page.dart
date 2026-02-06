@@ -40,7 +40,7 @@ class _SavedItineraryItem {
   String get travellerBreakdown {
     final parts = <String>[];
     if (adults > 0) parts.add('$adults Adult${adults > 1 ? 's' : ''}');
-    if (children > 0) parts.add('$children Child');
+    if (children > 0) parts.add('$children Child${children > 1 ? 'ren' : ''}');
     return parts.join(', ');
   }
 }
@@ -105,8 +105,18 @@ class _SavedItinerariesPageState extends State<SavedItinerariesPage> {
   }
 
   List<_SavedItineraryItem> get _filteredItems {
-    if (_selectedFilter == _SavedItineraryStatus.all) return _allItems;
-    return _allItems.where((e) => e.status == _selectedFilter).toList();
+    List<_SavedItineraryItem> statusFiltered = _selectedFilter == _SavedItineraryStatus.all
+        ? List.from(_allItems)
+        : _allItems.where((e) => e.status == _selectedFilter).toList();
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isEmpty) return statusFiltered;
+    return statusFiltered.where((e) {
+      final titleMatch = e.title.toLowerCase().contains(query);
+      final groupMatch = e.groupType.toLowerCase().contains(query);
+      final dateMatch = _formatSavedAt(e.savedAt).toLowerCase().contains(query);
+      final daysMatch = e.durationDays.toString().contains(query) || '${e.durationDays} day'.contains(query);
+      return titleMatch || groupMatch || dateMatch || daysMatch;
+    }).toList();
   }
 
   @override
@@ -191,6 +201,7 @@ class _SavedItinerariesPageState extends State<SavedItinerariesPage> {
           Expanded(
             child: TextField(
               controller: _searchController,
+              onChanged: (_) => setState(() {}),
               style: TextStyle(
                 fontSize: 14.sp,
                 color: AppColors.darkText,

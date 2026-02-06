@@ -9,6 +9,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 
+/// Default location label shown in the app bar.
+/// TODO: Replace with dynamic location (e.g. from GPS, user preference, or API).
+const String _kDefaultLocationLabel = 'Satpur, Nashik';
+
 /// Transparent AppBar Widget
 /// Displays a transparent app bar with location info and user greeting
 /// Changes background to white with blur when scrolling
@@ -56,25 +60,13 @@ class _TransparentAppBarWidgetState extends State<TransparentAppBarWidget> {
       _updateSystemUIIfNeeded(isScrolling);
     });
 
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: isScrolling ? 4.0 : 0.0,
-              sigmaY: isScrolling ? 4.0 : 0.0,
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isScrolling 
-                    ? const Color(0x4DFFFFFF) // #FFFFFF4D when scrolling (30% opacity white)
-                    : Colors.transparent,
-              ),
-              child: Column(
+    final content = Container(
+      decoration: BoxDecoration(
+        color: isScrolling
+            ? const Color(0x4DFFFFFF) // #FFFFFF4D when scrolling (30% opacity white)
+            : Colors.transparent,
+      ),
+      child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Status bar inset only
@@ -139,7 +131,7 @@ class _TransparentAppBarWidgetState extends State<TransparentAppBarWidget> {
                                   ),
                                   SizedBox(height: 2.h),
                                   Text(
-                                    'Satpur, Nashik',
+                                    _kDefaultLocationLabel,
                                     style: GoogleFonts.montserrat(
                                       fontSize: 11.sp,
                                       fontWeight: FontWeight.w300,
@@ -168,8 +160,21 @@ class _TransparentAppBarWidgetState extends State<TransparentAppBarWidget> {
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: ClipRect(
+          child: isScrolling
+              ? BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+                  child: content,
+                )
+              : content,
         ),
       ),
     );

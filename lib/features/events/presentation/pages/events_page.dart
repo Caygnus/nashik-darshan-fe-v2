@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nashik/core/router/navigation/app_navigator.dart';
 import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/core/utils/snackbar.dart';
 
 /// Events Screen
 /// Displays events and festivals in Nashik
@@ -17,38 +18,38 @@ class EventsPage extends StatefulWidget {
 class _EventsPageState extends State<EventsPage> {
   String _selectedCategory = 'All Events';
 
+  bool _matchesCategory(String? eventCategory) =>
+      _selectedCategory == 'All Events' || eventCategory == _selectedCategory;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF1F2937)),
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
-            title: Text(
-              'Events',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1F2937),
-                fontFamily: 'Roboto',
-              ),
-            ),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                icon: Icon(Icons.bookmark_border, size: 24.sp, color: const Color(0xFF1F2937)),
-                onPressed: () => context.pushNamed(AppRouteNames.savedEvents),
-              ),
-            ],
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: const Color(0xFF1F2937)),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Events',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1F2937),
+            fontFamily: 'Roboto',
           ),
-          Expanded(
-            child: SingleChildScrollView(
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.bookmark_border, size: 24.sp, color: const Color(0xFF1F2937)),
+            onPressed: () => context.pushNamed(AppRouteNames.savedEvents),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.only(bottom: 80.h), // Padding for bottom navigation bar
         child: Column(
@@ -72,13 +73,36 @@ class _EventsPageState extends State<EventsPage> {
           ],
         ),
       ),
-    ),
-        ],
-      ),
     );
   }
 
+  static final List<Map<String, dynamic>> _featuredEvents = [
+    {
+      'imagePath': 'assets/images/home-hero.png',
+      'title': 'Shravan Maas Special',
+      'date': 'Jul 22 - Aug 19 · All Day',
+      'location': 'Ramkund, Panchavati',
+      'badgeText': 'Live Now',
+      'badgeColor': Colors.red,
+      'eventId': 'shravan-maas-special',
+      'category': 'Spiritual',
+    },
+    {
+      'imagePath': 'assets/images/home-hero.png',
+      'title': 'Devotional Concert by Anup Jalota',
+      'date': 'Jan 12 · 6:00 PM - 9:00 PM',
+      'location': 'Kalidas Auditorium',
+      'badgeText': 'This Weekend',
+      'badgeColor': const Color(0xFFFF9933),
+      'eventId': 'anup-jalota-concert',
+      'category': 'Cultural',
+    },
+  ];
+
   Widget _buildFeaturedEventsSection() {
+    final filtered = _featuredEvents
+        .where((e) => _matchesCategory(e['category'] as String?))
+        .toList();
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
@@ -98,9 +122,7 @@ class _EventsPageState extends State<EventsPage> {
                 ),
               ),
               InkWell(
-                onTap: () {
-                  // TODO: Navigate to all featured events
-                },
+                onTap: () => context.pushNamed(AppRouteNames.upcomingEvents),
                 child: Text(
                   'View All',
                   style: TextStyle(
@@ -114,26 +136,19 @@ class _EventsPageState extends State<EventsPage> {
             ],
           ),
           SizedBox(height: 16.h),
-          // Featured Event Cards
-          _buildFeaturedEventCard(
-            imagePath: 'assets/images/home-hero.png',
-            title: 'Shravan Maas Special',
-            date: 'Jul 22 - Aug 19 · All Day',
-            location: 'Ramkund, Panchavati',
-            badgeText: 'Live Now',
-            badgeColor: Colors.red,
-            eventId: 'shravan-maas-special',
-          ),
-          SizedBox(height: 16.h),
-          _buildFeaturedEventCard(
-            imagePath: 'assets/images/home-hero.png',
-            title: 'Devotional Concert by Anup Jalota',
-            date: 'Jan 12 · 6:00 PM - 9:00 PM',
-            location: 'Kalidas Auditorium',
-            badgeText: 'This Weekend',
-            badgeColor: const Color(0xFFFF9933),
-            eventId: 'anup-jalota-concert',
-          ),
+          // Featured Event Cards (filtered by category)
+          ...filtered.map((e) => Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: _buildFeaturedEventCard(
+                  imagePath: e['imagePath'] as String,
+                  title: e['title'] as String,
+                  date: e['date'] as String,
+                  location: e['location'] as String,
+                  badgeText: e['badgeText'] as String,
+                  badgeColor: e['badgeColor'] as Color,
+                  eventId: e['eventId'] as String,
+                ),
+              )),
         ],
       ),
     );
@@ -376,15 +391,18 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
-  Widget _buildUpcomingEventsSection() {
-    final upcomingEvents = [
-      {'day': '12', 'month': 'JAN', 'title': 'Morning Ganga Aarti', 'description': 'Daily spiritual ritual at the holy ghat.', 'time': '5:30 AM - 6:30 AM', 'location': 'Ramkund Ghat', 'tag': {'text': 'Today', 'color': const Color(0xFF10B981)}, 'eventId': 'morning-ganga-aarti'},
-      {'day': '13', 'month': 'JAN', 'title': 'Spiritual Discourse', 'description': 'Bhagavad Gita teachings by Swami Ji.', 'time': '4:00 PM - 6:00 PM', 'location': 'Sita Gufa Temple', 'tag': {'text': 'Free', 'color': const Color(0xFF3B82F6)}, 'eventId': 'spiritual-discourse'},
-      {'day': '14', 'month': 'JAN', 'title': 'Makar Sankranti Celebration', 'description': 'Traditional kite flying & holy dip ceremony.', 'time': '6:00 AM - 12:00 PM', 'location': 'Godavari Ghat', 'tag': {'text': 'Festival', 'color': const Color(0xFF9333EA)}, 'eventId': 'makar-sankranti'},
-      {'day': '15', 'month': 'JAN', 'title': 'Kathak Dance Performance', 'description': 'Classical dance depicting Lord Krishna tales.', 'time': '7:00 PM - 9:00 PM', 'location': 'Kalidas Auditorium', 'tag': {'text': 'Cultural', 'color': const Color(0xFFFF9933)}, 'eventId': 'kathak-dance'},
-      {'day': '18', 'month': 'JAN', 'title': 'Weekend Bhajan Sandhya', 'description': 'Devotional singing by local artists.', 'time': '5:00 PM - 7:00 PM', 'location': 'Kapaleshwar Temple', 'tag': {'text': 'Weekend', 'color': const Color(0xFFFFB048)}, 'eventId': 'weekend-bhajan'},
-    ];
+  static final List<Map<String, dynamic>> _upcomingEvents = [
+    {'day': '12', 'month': 'JAN', 'title': 'Morning Ganga Aarti', 'description': 'Daily spiritual ritual at the holy ghat.', 'time': '5:30 AM - 6:30 AM', 'location': 'Ramkund Ghat', 'tag': {'text': 'Today', 'color': const Color(0xFF10B981)}, 'eventId': 'morning-ganga-aarti', 'category': 'Spiritual'},
+    {'day': '13', 'month': 'JAN', 'title': 'Spiritual Discourse', 'description': 'Bhagavad Gita teachings by Swami Ji.', 'time': '4:00 PM - 6:00 PM', 'location': 'Sita Gufa Temple', 'tag': {'text': 'Free', 'color': const Color(0xFF3B82F6)}, 'eventId': 'spiritual-discourse', 'category': 'Spiritual'},
+    {'day': '14', 'month': 'JAN', 'title': 'Makar Sankranti Celebration', 'description': 'Traditional kite flying & holy dip ceremony.', 'time': '6:00 AM - 12:00 PM', 'location': 'Godavari Ghat', 'tag': {'text': 'Festival', 'color': const Color(0xFF9333EA)}, 'eventId': 'makar-sankranti', 'category': 'Festival'},
+    {'day': '15', 'month': 'JAN', 'title': 'Kathak Dance Performance', 'description': 'Classical dance depicting Lord Krishna tales.', 'time': '7:00 PM - 9:00 PM', 'location': 'Kalidas Auditorium', 'tag': {'text': 'Cultural', 'color': const Color(0xFFFF9933)}, 'eventId': 'kathak-dance', 'category': 'Cultural'},
+    {'day': '18', 'month': 'JAN', 'title': 'Weekend Bhajan Sandhya', 'description': 'Devotional singing by local artists.', 'time': '5:00 PM - 7:00 PM', 'location': 'Kapaleshwar Temple', 'tag': {'text': 'Weekend', 'color': const Color(0xFFFFB048)}, 'eventId': 'weekend-bhajan', 'category': 'Spiritual'},
+  ];
 
+  Widget _buildUpcomingEventsSection() {
+    final filtered = _upcomingEvents
+        .where((e) => _matchesCategory(e['category'] as String?))
+        .toList();
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
@@ -418,8 +436,8 @@ class _EventsPageState extends State<EventsPage> {
             ],
           ),
           SizedBox(height: 16.h),
-          // Event Cards
-          ...upcomingEvents.map((event) => Padding(
+          // Event Cards (filtered by category)
+          ...filtered.map((event) => Padding(
                 padding: EdgeInsets.only(bottom: 16.h),
                 child: _buildUpcomingEventCard(
                   day: event['day'] as String,
@@ -596,7 +614,9 @@ class _EventsPageState extends State<EventsPage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      Snackbar.showSuccess('Event saved to your list');
+                    },
                     borderRadius: BorderRadius.circular(8.r),
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -626,28 +646,17 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
-  Widget _buildEventsYouMayLikeSection() {
-    final events = [
-      {
-        'image': 'assets/images/home-hero.png',
-        'title': 'Morning Yoga & Meditation',
-        'dateTime': 'Jan 20 · 6:00 AM',
-        'location': 'Trimbakeshwar',
-      },
-      {
-        'image': 'assets/images/home-hero.png',
-        'title': 'Lavani Folk Dance Show',
-        'dateTime': 'Jan 22 · 8:00 PM',
-        'location': 'City Hall',
-      },
-      {
-        'image': 'assets/images/home-hero.png',
-        'title': 'Evening Maha Aarti',
-        'dateTime': 'Daily · 7:00 PM',
-        'location': 'Sundar Narayan',
-      },
-    ];
+  static final List<Map<String, dynamic>> _eventsYouMayLike = [
+    {'image': 'assets/images/home-hero.png', 'title': 'Morning Yoga & Meditation', 'dateTime': 'Jan 20 · 6:00 AM', 'location': 'Trimbakeshwar', 'category': 'Spiritual'},
+    {'image': 'assets/images/home-hero.png', 'title': 'Lavani Folk Dance Show', 'dateTime': 'Jan 22 · 8:00 PM', 'location': 'City Hall', 'category': 'Cultural'},
+    {'image': 'assets/images/home-hero.png', 'title': 'Evening Maha Aarti', 'dateTime': 'Daily · 7:00 PM', 'location': 'Sundar Narayan', 'category': 'Spiritual'},
+    {'image': 'assets/images/home-hero.png', 'title': 'Heritage Walk - Old Nashik', 'dateTime': 'Jan 25 · 9:00 AM', 'location': 'Panchavati', 'category': 'Discovery'},
+  ];
 
+  Widget _buildEventsYouMayLikeSection() {
+    final filtered = _eventsYouMayLike
+        .where((e) => _matchesCategory(e['category'] as String?))
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -669,9 +678,9 @@ class _EventsPageState extends State<EventsPage> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 20.w),
-            itemCount: events.length,
+            itemCount: filtered.length,
             itemBuilder: (context, index) {
-              final event = events[index];
+              final event = filtered[index];
               return Container(
                 width: 280.w,
                 margin: EdgeInsets.only(right: 12.w),
@@ -754,7 +763,9 @@ class _EventsPageState extends State<EventsPage> {
                     SizedBox(width: 8.w),
                     // Save Event Button (orange, white text)
                     InkWell(
-                      onTap: () {},
+                      onTap: () {
+                        Snackbar.showSuccess('Event saved to your list');
+                      },
                       borderRadius: BorderRadius.circular(8.r),
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),

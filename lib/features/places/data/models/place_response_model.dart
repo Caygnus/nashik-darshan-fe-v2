@@ -52,6 +52,20 @@ class CategoryRefModel {
   }
 }
 
+/// Preferred key order for address string (predictable output across API responses).
+const List<String> _addressKeyOrder = [
+  'street',
+  'street2',
+  'line1',
+  'line2',
+  'city',
+  'state',
+  'region',
+  'postal_code',
+  'zip',
+  'country',
+];
+
 /// Data model for dto.PlaceResponse with safe parsing of categories, images, location.
 class PlaceResponseModel {
   PlaceResponseModel({
@@ -141,7 +155,7 @@ class PlaceResponseModel {
       primaryImageUrl: json['primary_image_url'] as String?,
       thumbnailUrl: json['thumbnail_url'] as String?,
       ratingAvg: ratingAvg is num ? ratingAvg.toDouble() : null,
-      ratingCount: ratingCount is int? ? ratingCount : null,
+      ratingCount: ratingCount is int ? ratingCount : null,
       address: address,
       subtitle: json['subtitle'] as String?,
       createdAt: json['created_at'] as String?,
@@ -151,6 +165,28 @@ class PlaceResponseModel {
           : null,
       viewCount: json['view_count'] as int?,
     );
+  }
+
+  static String _addressMapToOrderedString(Map<String, dynamic> address) {
+    final parts = <String>[];
+    for (final key in _addressKeyOrder) {
+      if (address.containsKey(key)) {
+        final v = address[key];
+        if (v != null) {
+          final s = v.toString().trim();
+          if (s.isNotEmpty) parts.add(s);
+        }
+      }
+    }
+    final remaining = address.keys.where((k) => !_addressKeyOrder.contains(k)).toList()..sort();
+    for (final key in remaining) {
+      final v = address[key];
+      if (v != null) {
+        final s = v.toString().trim();
+        if (s.isNotEmpty) parts.add(s);
+      }
+    }
+    return parts.join(', ');
   }
 
   /// Map to existing Place entity for UI compatibility.
@@ -173,7 +209,7 @@ class PlaceResponseModel {
     }
     String? addressStr;
     if (address != null && address!.isNotEmpty) {
-      addressStr = address!.values.join(', ');
+      addressStr = _addressMapToOrderedString(address!);
     }
     return Place(
       id: id,

@@ -23,8 +23,11 @@ class CategoryEntity {
       identical(this, other) ||
       other is CategoryEntity &&
           runtimeType == other.runtimeType &&
-          id == other.id;
+          id == other.id &&
+          name == other.name &&
+          description == other.description &&
+          status == other.status;
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(id, name, description, status);
 }

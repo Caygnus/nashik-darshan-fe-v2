@@ -59,6 +59,8 @@ class _MyItinerariesPageState extends State<MyItinerariesPage> {
   SavedItineraryStatus _selectedFilter = SavedItineraryStatus.all;
   static const List<String> _filterLabels = ['All', 'Upcoming', 'Completed', 'Draft'];
 
+  void _onSearchChanged() => setState(() {});
+
   static final List<_SavedItineraryItem> _allItems = [
     _SavedItineraryItem(
       id: '1',
@@ -96,14 +98,29 @@ class _MyItinerariesPageState extends State<MyItinerariesPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   List<_SavedItineraryItem> get _filteredItems {
-    if (_selectedFilter == SavedItineraryStatus.all) return _allItems;
-    return _allItems.where((e) => e.status == _selectedFilter).toList();
+    var items = _allItems;
+    if (_selectedFilter != SavedItineraryStatus.all) {
+      items = items.where((e) => e.status == _selectedFilter).toList();
+    }
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isEmpty) return items;
+    return items.where((e) {
+      return e.title.toLowerCase().contains(query) ||
+          e.groupType.toLowerCase().contains(query);
+    }).toList();
   }
 
   @override
@@ -513,7 +530,10 @@ class _SavedItineraryCard extends StatelessWidget {
 
   Widget _buildAvatarStack(int count) {
     const int showCount = 3;
-    final displayCount = count.clamp(1, showCount);
+    final displayCount = count.clamp(0, showCount);
+    if (displayCount == 0) {
+      return const SizedBox.shrink();
+    }
     return SizedBox(
       width: (28.w * displayCount) - (8.w * (displayCount - 1)),
       height: 28.h,

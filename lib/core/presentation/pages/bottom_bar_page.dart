@@ -17,8 +17,7 @@ const List<String> _tabPaths = [
 
 class BottomBarPage extends StatelessWidget {
   const BottomBarPage({super.key, required this.shell});
-  static const routeName = 'BottomBarPage';
-  static const routePath = '/BottomBarPage';
+
   final StatefulNavigationShell shell;
 
   @override

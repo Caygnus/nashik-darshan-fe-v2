@@ -28,8 +28,8 @@ abstract class AuthSupabaseDataSource {
   /// Get current Supabase session access token
   String? getCurrentAccessToken();
 
-  /// Initiate Google sign-in via Supabase OAuth. Returns true if flow started.
-  Future<bool> signInWithGoogle();
+  /// Initiate Google sign-in via Supabase OAuth. Completes when flow is initiated; throws on failure.
+  Future<void> signInWithGoogle();
 
   /// Sign out from Supabase (and any OAuth provider).
   Future<void> signOut();
@@ -133,7 +133,7 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
   }
 
   @override
-  Future<bool> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     try {
       SupabaseLogger.oauth('Initiating Google OAuth, redirectTo: $authOAuthRedirectUrl');
       await SupabaseConfig.client.auth.signInWithOAuth(
@@ -142,7 +142,6 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
       SupabaseLogger.oauth('Google OAuth flow started');
-      return true;
     } catch (e) {
       SupabaseLogger.oauth('Google OAuth failed: $e', error: true);
       throw ServerException(
@@ -211,9 +210,9 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
   Future<String> getSessionFromUrl(Uri uri) async {
     try {
       SupabaseLogger.oauth('Processing OAuth callback from URL');
-      await SupabaseConfig.client.auth.getSessionFromUrl(uri);
-      final session = SupabaseConfig.client.auth.currentSession;
-      if (session == null || session.accessToken.isEmpty) {
+      final response = await SupabaseConfig.client.auth.getSessionFromUrl(uri);
+      final session = response.session;
+      if (session.accessToken.isEmpty) {
         SupabaseLogger.oauth('OAuth callback: no session after getSessionFromUrl', error: true);
         throw ServerException(
           message: 'Failed to create or retrieve session from OAuth callback',

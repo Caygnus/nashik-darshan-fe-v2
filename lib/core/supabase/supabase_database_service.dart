@@ -19,11 +19,9 @@ class SupabaseDatabaseService {
   }) async {
     try {
       SupabaseLogger.db('Select from $table');
-      dynamic builder = _client.from(table).select();
-      if (column != null && value != null) {
-        builder = builder.eq(column, value);
-      }
-      final data = await builder;
+      final data = (column != null && value != null)
+          ? await _client.from(table).select().eq(column, value)
+          : await _client.from(table).select();
       final list = List<Map<String, dynamic>>.from((data as List).map((e) => Map<String, dynamic>.from(e as Map)));
       SupabaseLogger.db('Select from $table: ${list.length} rows');
       return list;
@@ -74,7 +72,8 @@ class SupabaseDatabaseService {
   }
 
   /// Update [table] where [column] = [value] with [data].
-  static Future<void> update(
+  /// Returns the number of rows affected (0 if none matched or RLS denied).
+  static Future<int> update(
     String table, {
     required String column,
     required Object value,
@@ -82,8 +81,10 @@ class SupabaseDatabaseService {
   }) async {
     try {
       SupabaseLogger.db('Update $table where $column');
-      await _client.from(table).update(data).eq(column, value);
-      SupabaseLogger.db('Update $table success');
+      final res = await _client.from(table).update(data).eq(column, value).select();
+      final count = (res as List).length;
+      SupabaseLogger.db('Update $table success ($count row(s))');
+      return count;
     } catch (e) {
       SupabaseLogger.error('DB update $table failed', e);
       rethrow;
@@ -91,15 +92,18 @@ class SupabaseDatabaseService {
   }
 
   /// Delete from [table] where [column] = [value].
-  static Future<void> delete(
+  /// Returns the number of rows affected (0 if none matched or RLS denied).
+  static Future<int> delete(
     String table, {
     required String column,
     required Object value,
   }) async {
     try {
       SupabaseLogger.db('Delete from $table where $column');
-      await _client.from(table).delete().eq(column, value);
-      SupabaseLogger.db('Delete from $table success');
+      final res = await _client.from(table).delete().eq(column, value).select();
+      final count = (res as List).length;
+      SupabaseLogger.db('Delete from $table success ($count row(s))');
+      return count;
     } catch (e) {
       SupabaseLogger.error('DB delete $table failed', e);
       rethrow;

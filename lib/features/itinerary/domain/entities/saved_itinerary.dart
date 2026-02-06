@@ -5,7 +5,8 @@ enum ItineraryTagColor {
   blue;
 
   static ItineraryTagColor fromString(String value) {
-    return switch (value) {
+    final normalized = value.trim().toLowerCase();
+    return switch (normalized) {
       'orange' => ItineraryTagColor.orange,
       'blue' => ItineraryTagColor.blue,
       _ => ItineraryTagColor.purple,

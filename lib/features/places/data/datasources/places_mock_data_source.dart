@@ -10,10 +10,8 @@ import '../models/place_model.dart';
 class PlacesMockDataSource {
   PlacesMockDataSource._();
 
-  /// Get all categories
-  static List<CategoryModel> getCategories() {
-    return [
-      CategoryModel(
+  static final List<CategoryModel> _categories = List.unmodifiable([
+    CategoryModel(
         id: 'spiritual',
         name: 'Spiritual',
         description: 'Discover the spiritual side of Nashik',
@@ -61,14 +59,13 @@ class PlacesMockDataSource {
         imagePath: 'assets/png/trambak.png',
         significance: 'Explore shopping destinations and local markets in Nashik.',
       ),
-    ];
-  }
+  ]);
 
-  /// Get all places
-  /// This is the centralized place database
-  static List<PlaceModel> getAllPlaces() {
-    return [
-      // ==================== SPIRITUAL PLACES ====================
+  /// Get all categories
+  static List<CategoryModel> getCategories() => _categories;
+
+  static final List<PlaceModel> _allPlaces = List.unmodifiable([
+    // ==================== SPIRITUAL PLACES ====================
       PlaceModel(
         id: 'trimbakeshwar',
         name: 'Trimbakeshwar',
@@ -259,18 +256,16 @@ class PlacesMockDataSource {
         openingHours: '10:00 AM - 10:00 PM',
         contactInfo: '+91 253 2345692',
       ),
-    ];
-  }
+  ]);
+
+  /// Get all places
+  /// This is the centralized place database
+  static List<PlaceModel> getAllPlaces() => _allPlaces;
 
   /// Get place by ID
   static PlaceModel? getPlaceById(String placeId) {
-    try {
-      return getAllPlaces().firstWhere(
-        (place) => place.id == placeId,
-      );
-    } catch (e) {
-      return null;
-    }
+    final matches = getAllPlaces().where((place) => place.id == placeId).toList();
+    return matches.isEmpty ? null : matches.first;
   }
 
   /// Get places by category ID
@@ -292,12 +287,7 @@ class PlacesMockDataSource {
 
   /// Get category by ID
   static CategoryModel? getCategoryById(String categoryId) {
-    try {
-      return getCategories().firstWhere(
-        (category) => category.id == categoryId,
-      );
-    } catch (e) {
-      return null;
-    }
+    final matches = getCategories().where((c) => c.id == categoryId).toList();
+    return matches.isEmpty ? null : matches.first;
   }
 }

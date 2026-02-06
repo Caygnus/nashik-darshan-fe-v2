@@ -26,7 +26,7 @@ class EventDetailPage extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Event detail',
+          eventTitle.isNotEmpty && eventTitle != 'Event' ? eventTitle : 'Event detail',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
@@ -150,7 +150,7 @@ class EventDetailPage extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
               Text(
-                'Shravan Somvar Mahapuja',
+                eventTitle.isNotEmpty ? eventTitle : 'Event',
                 style: TextStyle(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -160,7 +160,7 @@ class EventDetailPage extends StatelessWidget {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Mon, Jul 22, 2024 · 5:00 AM - 8:00 PM',
+                '—', // TODO: Load date/time from event by eventId when event API is available
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.normal,
@@ -329,7 +329,7 @@ class EventDetailPage extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Text(
-            'Shravan Somvar Mahapuja is a sacred Monday ritual during the holy month of Shravan, dedicated to Lord Shiva at Trimbakeshwar Temple. Devotees gather to perform Rudrabhishek, offering milk, water, and bilva leaves to seek divine blessings.',
+            'Event description and full details will be loaded by event ID when the event API is available.',
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.normal,
