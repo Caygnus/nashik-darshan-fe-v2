@@ -28,6 +28,9 @@ abstract class AuthSupabaseDataSource {
   /// Get current Supabase session access token
   String? getCurrentAccessToken();
 
+  /// Get current Supabase user id (auth.uid()). Null if no session.
+  String? getCurrentUserId();
+
   /// Initiate Google sign-in via Supabase OAuth. Completes when flow is initiated; throws on failure.
   Future<void> signInWithGoogle();
 
@@ -45,6 +48,19 @@ abstract class AuthSupabaseDataSource {
 
   /// Metadata of current Supabase user (email, full_name, name, display_name, phone). Null if no session.
   Future<Map<String, dynamic>?> getCurrentUserMetadata();
+
+  /// Upsert a row in the Supabase `profiles` table (id, name, email, phone, created_at).
+  /// Uses auth.uid() as id. Creates row on sign up / OAuth; updates if exists.
+  Future<void> upsertProfile({
+    required String id,
+    required String email,
+    required String name,
+    String? phone,
+  });
+
+  /// Fetch profile from Supabase `profiles` table by user id (auth.uid()).
+  /// Returns null if not found or RLS denies access.
+  Future<Map<String, dynamic>?> getProfileByUserId(String id);
 }
 
 class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
@@ -80,6 +96,13 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
       rethrow;
     } on AuthException catch (e) {
       SupabaseLogger.auth('Sign up failed: ${e.message}', action: 'email');
+      final msg = e.message.toLowerCase();
+      if (msg.contains('already registered') || msg.contains('already exists') || msg.contains('duplicate')) {
+        throw ServerException(
+          message: 'An account with this email already exists. Please sign in or use a different email.',
+          code: 'EMAIL_ALREADY_IN_USE',
+        );
+      }
       throw ServerException(message: e.message, code: 'SUPABASE_AUTH_ERROR');
     } catch (e) {
       SupabaseLogger.error('Sign up failed', e);
@@ -127,6 +150,15 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
     try {
       final session = SupabaseConfig.client.auth.currentSession;
       return session?.accessToken;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  String? getCurrentUserId() {
+    try {
+      return SupabaseConfig.client.auth.currentUser?.id;
     } catch (e) {
       return null;
     }
@@ -244,5 +276,50 @@ class AuthSupabaseDataSourceImpl implements AuthSupabaseDataSource {
       'display_name': user.userMetadata?['display_name'],
       'phone': user.phone,
     };
+  }
+
+  /// Supabase table name for user profiles (id = auth.uid(), name, email, phone, created_at).
+  static const String _profilesTable = 'profiles';
+
+  @override
+  Future<void> upsertProfile({
+    required String id,
+    required String email,
+    required String name,
+    String? phone,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'id': id,
+        'email': email,
+        'name': name,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+      };
+      await SupabaseConfig.client.from(_profilesTable).upsert(
+        data,
+        onConflict: 'id',
+      );
+      SupabaseLogger.db('Upsert profile for user $id');
+    } catch (e) {
+      SupabaseLogger.error('Profile upsert failed', e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getProfileByUserId(String id) async {
+    try {
+      final res = await SupabaseConfig.client
+          .from(_profilesTable)
+          .select()
+          .eq('id', id)
+          .limit(1)
+          .maybeSingle();
+      if (res == null) return null;
+      return Map<String, dynamic>.from(res as Map);
+    } catch (e) {
+      SupabaseLogger.error('Profile get failed', e);
+      rethrow;
+    }
   }
 }

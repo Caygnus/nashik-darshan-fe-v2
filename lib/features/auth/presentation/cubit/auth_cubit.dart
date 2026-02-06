@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nashik/core/auth/unauthorized_notifier.dart';
+import 'package:nashik/core/supabase/config.dart';
 import 'package:nashik/features/auth/domain/params/signin_with_email_params.dart';
 import 'package:nashik/features/auth/domain/params/signup_with_email_params.dart';
+import 'package:nashik/features/auth/domain/entities/user.dart';
 import 'package:nashik/features/auth/domain/params/verify_email_params.dart';
 import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
 import 'package:nashik/features/auth/domain/use_cases/reset_password.dart';
@@ -11,6 +15,8 @@ import 'package:nashik/features/auth/domain/use_cases/signin_with_email.dart';
 import 'package:nashik/features/auth/domain/use_cases/signup_with_email.dart';
 import 'package:nashik/features/auth/domain/use_cases/verify_email.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
+// Stream payload has .event (AuthChangeEvent) and .session (Session?) from Supabase auth
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({
@@ -33,7 +39,10 @@ class AuthCubit extends Cubit<AuthState> {
         super(const AuthState.initial()) {
     unauthorizedNotifier.setCallback(this.signOut);
     _initializeAuthState();
+    _authSubscription = SupabaseConfig.client.auth.onAuthStateChange.listen(_onAuthStateChange);
   }
+
+  StreamSubscription<dynamic>? _authSubscription;
 
   final SignupWithEmail _signupWithEmail;
   final SigninWithEmail _signinWithEmail;
@@ -46,14 +55,32 @@ class AuthCubit extends Cubit<AuthState> {
 
   @override
   Future<void> close() {
+    _authSubscription?.cancel();
+    _authSubscription = null;
     _unauthorizedNotifier.clearCallback();
     return super.close();
   }
 
-  /// Initializes auth state from current user.
-  /// TODO(github): Subscribe to Supabase auth.onAuthStateChange before production
-  /// so session persistence, OAuth callbacks, and sign-out from other sources
-  /// are handled. Track in a GitHub issue and link it here.
+  /// Handles Supabase auth state changes: session restore, sign-in, sign-out, token refresh.
+  void _onAuthStateChange(dynamic data) {
+    final event = data.event as AuthChangeEvent?;
+    if (event == null) return;
+    if (event == AuthChangeEvent.signedOut) {
+      emit(const AuthState.unauthenticated());
+      return;
+    }
+    if (event == AuthChangeEvent.initialSession ||
+        event == AuthChangeEvent.signedIn ||
+        event == AuthChangeEvent.tokenRefreshed) {
+      if (data.session != null) {
+        _loadCurrentUser();
+      } else {
+        emit(const AuthState.unauthenticated());
+      }
+    }
+  }
+
+  /// Initializes auth state from current session (app startup / session persistence).
   void _initializeAuthState() async {
     final result = await _getCurrentUser();
     result.fold(
@@ -64,6 +91,12 @@ class AuthCubit extends Cubit<AuthState> {
 
   void loadCurrentUser() {
     _loadCurrentUser();
+  }
+
+  /// Sets the authenticated user (e.g. after OAuth callback returns user).
+  /// Use this when you already have the user and want to avoid an extra getCurrentUser call.
+  void setAuthenticatedUser(User user) {
+    emit(AuthState.authenticated(user));
   }
 
   Future<void> _loadCurrentUser() async {

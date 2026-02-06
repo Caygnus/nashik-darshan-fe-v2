@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nashik/core/auth/auth_guard.dart';
+import 'package:nashik/core/router/route_paths.dart';
 import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/theme/colors.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
@@ -93,7 +95,8 @@ class ProfilePage extends StatelessWidget {
                     ),
                     SizedBox(height: 24.h),
                     FilledButton(
-                      onPressed: () => context.pushNamed(AppRouteNames.login),
+                      onPressed: () =>
+                          context.go(loginPathWithRedirect(AppRoutePaths.profile)),
                       child: const Text('Login'),
                     ),
                   ],
@@ -484,6 +487,40 @@ class ProfilePage extends StatelessWidget {
                       Icons.arrow_forward_ios,
                       size: 14.sp,
                       color: AppColors.grey,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async {
+                await context.read<AuthCubit>().signOut();
+                if (context.mounted) context.goNamed(AppRouteNames.home);
+              },
+              borderRadius: BorderRadius.circular(12.r),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout,
+                      size: 22.sp,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Log out',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primary,
+                          fontFamily: GoogleFonts.roboto().fontFamily,
+                        ),
+                      ),
                     ),
                   ],
                 ),

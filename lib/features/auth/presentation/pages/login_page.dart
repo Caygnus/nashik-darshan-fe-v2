@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/auth/auth_guard.dart';
 import 'package:nashik/core/di/get_it.dart';
 import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/storage/login_preferences.dart';
@@ -94,7 +95,15 @@ class _LoginPageState extends State<LoginPage> {
         state.when(
           initial: () {},
           loading: () {},
-          authenticated: (_) => context.goNamed(AppRouteNames.home),
+          authenticated: (_) {
+            if (!context.mounted) return;
+            final redirect = redirectPathFromUri(GoRouterState.of(context).uri);
+            if (redirect != null) {
+              context.go(redirect);
+            } else {
+              context.goNamed(AppRouteNames.home);
+            }
+          },
           unauthenticated: () {},
           error: (String message) => Snackbar.showError(message),
         );

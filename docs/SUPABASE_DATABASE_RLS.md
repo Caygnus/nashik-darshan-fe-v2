@@ -15,33 +15,33 @@ ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
 
 ### Authenticated users (read/write own data)
 
-Example: table `profiles` with `user_id` (UUID) = `auth.uid()`.
+Example: table `profiles` with `id` (UUID, primary key) = `auth.uid()`. See `docs/SUPABASE_PROFILES_TABLE.md` for full schema and migration.
 
 ```sql
 -- Allow authenticated users to read their own row
 CREATE POLICY "Users can read own profile"
 ON profiles FOR SELECT
 TO authenticated
-USING (auth.uid() = user_id);
+USING (auth.uid() = id);
 
 -- Allow authenticated users to insert their own row
 CREATE POLICY "Users can insert own profile"
 ON profiles FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (auth.uid() = id);
 
 -- Allow authenticated users to update their own row
 CREATE POLICY "Users can update own profile"
 ON profiles FOR UPDATE
 TO authenticated
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
 
 -- Allow authenticated users to delete their own row (if needed)
 CREATE POLICY "Users can delete own profile"
 ON profiles FOR DELETE
 TO authenticated
-USING (auth.uid() = user_id);
+USING (auth.uid() = id);
 ```
 
 ### Public read, authenticated write

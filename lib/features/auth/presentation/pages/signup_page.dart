@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/auth/auth_guard.dart';
 import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/utils/launch_url.dart';
 import 'package:nashik/core/theme/colors.dart';
@@ -28,6 +29,7 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -43,6 +45,7 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -116,13 +119,12 @@ class _SignupPageState extends State<SignupPage> {
         Snackbar.showError('Passwords do not match');
         return;
       }
-      // Extract name from email (before @) as default, or use email if no name field
+      final name = _nameController.text.trim();
       final email = _emailController.text.trim();
-      final name = email.split('@').first; // Use email prefix as name
       context.read<AuthCubit>().signUpWithEmail(
         email: email,
         password: _passwordController.text,
-        name: name,
+        name: name.isNotEmpty ? name : email.split('@').first,
       );
     }
   }
@@ -154,7 +156,15 @@ class _SignupPageState extends State<SignupPage> {
         state.when(
           initial: () {},
           loading: () {},
-          authenticated: (_) => context.goNamed(AppRouteNames.personalizeJourney),
+          authenticated: (_) {
+            if (!context.mounted) return;
+            final redirect = redirectPathFromUri(GoRouterState.of(context).uri);
+            if (redirect != null) {
+              context.go(redirect);
+            } else {
+              context.goNamed(AppRouteNames.personalizeJourney);
+            }
+          },
           unauthenticated: () {},
           error: (String message) => Snackbar.showError(message),
         );
@@ -250,6 +260,68 @@ class _SignupPageState extends State<SignupPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Name
+                              Text(
+                                'Full Name',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.darkText,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              TextFormField(
+                                controller: _nameController,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: InputDecoration(
+                                  hintText: 'Enter your name',
+                                  hintStyle: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: AppColors.hintText,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE0E0E0),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE0E0E0),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 14.h,
+                                  ),
+                                  suffixIcon: Icon(
+                                    Icons.person_outline,
+                                    color: AppColors.primary,
+                                    size: 22.sp,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Please enter your name';
+                                  }
+                                  if (value.trim().length < 2) {
+                                    return 'Name must be at least 2 characters';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 18.h),
+
                               // Email
                               Text(
                                 'Email Address',

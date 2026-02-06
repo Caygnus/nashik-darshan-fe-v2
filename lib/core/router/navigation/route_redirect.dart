@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/auth/auth_guard.dart';
 import 'package:nashik/core/router/route_paths.dart';
 import 'package:nashik/core/supabase/config.dart';
 
@@ -7,9 +8,17 @@ import 'package:nashik/core/supabase/config.dart';
 class RouteRedirect {
   RouteRedirect._();
 
-  /// List of protected routes that require authentication
+  /// Routes that require authentication. Unauthenticated users are redirected to login
+  /// with a return path so they can resume after signing in. All other routes are public (guest mode).
+  /// Paths under profile (e.g. /profile/edit) are covered by path.startsWith(profile).
   static const List<String> protectedRoutes = [
     AppRoutePaths.profile,
+  ];
+
+  /// Auth routes: if user is already authenticated, redirect to home
+  static const List<String> authRoutes = [
+    AppRoutePaths.login,
+    AppRoutePaths.signup,
   ];
 
   /// Handle route redirects
@@ -31,11 +40,20 @@ class RouteRedirect {
       return _handleDeepLink(uri);
     }
 
-    // Protected routes: require Supabase auth (Supabase is initialized before router)
+    // Supabase auth state (session persistence: valid session = authenticated)
     final user = SupabaseConfig.client.auth.currentUser;
-    if (user == null && protectedRoutes.any((r) => path.startsWith(r))) {
-      debugPrint('🔒 Protected route without auth, redirecting to login');
-      return AppRoutePaths.login;
+    final isAuthenticated = user != null;
+
+    // Protected routes: require authentication; pass path for redirect after login
+    if (!isAuthenticated && protectedRoutes.any((r) => path.startsWith(r))) {
+      debugPrint('🔒 Protected route without auth, redirecting to login (guest mode)');
+      return loginPathWithRedirect(path);
+    }
+
+    // Auth routes (login/signup): if already authenticated, go to home
+    if (isAuthenticated && authRoutes.any((r) => path.startsWith(r))) {
+      debugPrint('✅ Already authenticated, redirecting to home');
+      return AppRoutePaths.home;
     }
 
     debugPrint('✅ No redirect needed');

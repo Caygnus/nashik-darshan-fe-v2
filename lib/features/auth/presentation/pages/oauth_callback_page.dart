@@ -54,13 +54,9 @@ class _OAuthCallbackPageState extends State<OAuthCallbackPage> {
           _errorMessage = 'Failed to complete sign in: ${failure.message}';
         });
       },
-      (_) {
-        context.read<AuthCubit>().loadCurrentUser();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            context.goNamed(AppRouteNames.home);
-          }
-        });
+      (user) {
+        context.read<AuthCubit>().setAuthenticatedUser(user);
+        if (mounted) context.goNamed(AppRouteNames.home);
       },
     );
   }

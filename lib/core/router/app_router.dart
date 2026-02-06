@@ -66,7 +66,7 @@ class AppRouter {
     ];
 
     router = GoRouter(
-      initialLocation: AppRoutePaths.home,
+      initialLocation: AppRoutePaths.splash,
       navigatorKey: parentNavigatorKey,
       routes: routes,
       redirect: RouteRedirect.handleRedirect,
