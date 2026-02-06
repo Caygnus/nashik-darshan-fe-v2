@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:nashik/widgets/category_selection_widget.dart';
-import 'package:nashik/widgets/filter_buttons_widget.dart';
-import 'package:nashik/widgets/listing_card_widget.dart';
-import 'package:nashik/widgets/promotional_box_widget.dart';
-import 'package:nashik/widgets/result_count_widget.dart';
-import 'package:nashik/widgets/search_bar_widget.dart';
-import 'package:nashik/widgets/section_title_widget.dart';
-import 'package:nashik/widgets/user_review_card_widget.dart';
-import 'package:nashik/widgets/view_all_button_widget.dart';
+import 'package:nashik/core/presentation/widgets/category_selection_widget.dart';
+import 'package:nashik/core/presentation/widgets/filter_buttons_widget.dart';
+import 'package:nashik/core/presentation/widgets/listing_card_widget.dart';
+import 'package:nashik/core/presentation/widgets/promotional_box_widget.dart';
+import 'package:nashik/core/presentation/widgets/result_count_widget.dart';
+import 'package:nashik/core/presentation/widgets/search_bar_widget.dart';
+import 'package:nashik/core/presentation/widgets/section_title_widget.dart';
+import 'package:nashik/core/presentation/widgets/user_review_card_widget.dart';
+import 'package:nashik/core/presentation/widgets/view_all_button_widget.dart';
 
 /// Street Food Screen
 /// Displays street food and local food stalls in Nashik

@@ -1,66 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:nashik/core/theme/colors.dart';
 
 class AppTextStyle {
-  // Heading TextStyle
-  static final heading1 = TextStyle(
-    fontSize: 24.sp,
-    fontWeight: FontWeight.w600,
-    color: Colors.black,
-  );
-
-  static final heading2 = TextStyle(
+  // H1 - Large Heading
+  static TextStyle h1({Color? color}) => GoogleFonts.plusJakartaSans(
     fontSize: 20.sp,
-    fontWeight: FontWeight.w600,
-    color: Colors.black,
-  );
-
-  // Subheading TextStyle
-  static final subHeading = TextStyle(
-    fontSize: 18.sp,
-    fontWeight: FontWeight.w500,
-    color: Colors.black54,
-  );
-
-  // Body TextStyle
-  static final bodyText1 = TextStyle(
-    fontSize: 16.sp,
-    fontWeight: FontWeight.normal,
-    color: Colors.black87,
-  );
-
-  static final bodyText2 = TextStyle(
-    fontSize: 14.sp,
-    fontWeight: FontWeight.normal,
-    color: Colors.black87,
-  );
-
-  // Caption TextStyle
-  static final caption = TextStyle(
-    fontSize: 12.sp,
-    fontWeight: FontWeight.normal,
-    color: Colors.grey,
-  );
-
-  // Button TextStyle
-  static final button = TextStyle(
-    fontSize: 14.sp,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: color ?? AppColors.darkText,
+    letterSpacing: -0.3,
+    height: 1.2,
   );
 
-  // Error TextStyle
-  static final error = TextStyle(
+  // H2 - Medium Heading
+  static TextStyle h2({Color? color}) => GoogleFonts.plusJakartaSans(
+    fontSize: 18.sp,
+    fontWeight: FontWeight.bold,
+    color: color ?? AppColors.darkText,
+    letterSpacing: -0.2,
+    height: 1.3,
+  );
+
+  // H3 - Small Heading
+  static TextStyle h3({Color? color}) => GoogleFonts.plusJakartaSans(
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
+    color: color ?? AppColors.darkText,
+    height: 1.4,
+  );
+
+  // Body - Regular text
+  static TextStyle body({Color? color, FontWeight? fontWeight}) =>
+      GoogleFonts.plusJakartaSans(
+        fontSize: 14.sp,
+        fontWeight: fontWeight ?? FontWeight.normal,
+        color: color ?? AppColors.darkText,
+        height: 1.5,
+      );
+
+  // Body Large - Slightly larger body text
+  static TextStyle bodyLarge({Color? color, FontWeight? fontWeight}) =>
+      GoogleFonts.plusJakartaSans(
+        fontSize: 15.sp,
+        fontWeight: fontWeight ?? FontWeight.normal,
+        color: color ?? AppColors.darkText,
+        height: 1.5,
+      );
+
+  // Subtitle - Secondary text
+  static TextStyle subtitle({Color? color}) => GoogleFonts.plusJakartaSans(
+    fontSize: 13.sp,
+    fontWeight: FontWeight.w500,
+    color: color ?? AppColors.grey,
+    height: 1.4,
+  );
+
+  // Caption - Small text
+  static TextStyle caption({Color? color, FontWeight? fontWeight}) =>
+      GoogleFonts.plusJakartaSans(
+        fontSize: 12.sp,
+        fontWeight: fontWeight ?? FontWeight.normal,
+        color: color ?? AppColors.grey,
+        height: 1.4,
+      );
+
+  // Button Text
+  static TextStyle button({Color? color}) => GoogleFonts.plusJakartaSans(
     fontSize: 14.sp,
-    fontWeight: FontWeight.normal,
-    color: Colors.red,
+    fontWeight: FontWeight.w600,
+    color: color ?? Colors.white,
+    height: 1.4,
   );
 
-  // Custom TextStyle for specific use cases
-  static final customStyle1 = TextStyle(
-    fontSize: 17.sp,
-    fontWeight: FontWeight.w400,
-    color: Colors.blue,
-    letterSpacing: 1.2,
+  // Label - For form labels, etc.
+  static TextStyle label({Color? color}) => GoogleFonts.plusJakartaSans(
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w500,
+    color: color ?? AppColors.grey,
+    height: 1.4,
+  );
+
+  // Overline - Very small text
+  static TextStyle overline({Color? color}) => GoogleFonts.plusJakartaSans(
+    fontSize: 10.sp,
+    fontWeight: FontWeight.w600,
+    color: color ?? AppColors.grey,
+    letterSpacing: 0.5,
+    height: 1.4,
   );
 }

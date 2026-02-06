@@ -1,0 +1,20 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'user.freezed.dart';
+
+@freezed
+class User with _$User {
+  const factory User({
+    required String id,
+    required String email,
+    required String name,
+    String? phone,
+    required String role,
+    Map<String, String>? metadata,
+    required String status,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    String? createdBy,
+    String? updatedBy,
+  }) = _User;
+}

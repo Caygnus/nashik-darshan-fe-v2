@@ -1,0 +1,9 @@
+# Copy this file to key.properties and fill in your actual values
+# This file is gitignored and will NOT be committed to the repository
+# See docs/ANDROID_RELEASE_BUILD_SETUP.md for setup instructions
+
+storePassword=your_keystore_password_here
+keyPassword=your_key_password_here
+keyAlias=nashikdarshan_release_key
+storeFile=/Users/YOUR_USERNAME/keys/myapp-release.jks
+

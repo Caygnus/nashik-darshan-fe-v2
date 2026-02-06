@@ -1,126 +1,100 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nashik/core/pages/bottom_bar_page.dart';
-import 'package:nashik/features/category/presentation/pages/category_page.dart';
-import 'package:nashik/features/eatery/presentation/pages/eatery_screen.dart';
+import 'package:nashik/core/router/navigation/route_redirect.dart';
+import 'package:nashik/core/router/route_paths.dart';
+import 'package:nashik/core/router/routes/auth_routes.dart';
+import 'package:nashik/core/router/routes/feature_routes.dart';
+import 'package:nashik/core/router/routes/main_tab_routes.dart';
+import 'package:nashik/core/router/routes/utility_routes.dart';
 import 'package:nashik/features/home/presentation/pages/home_screen.dart';
-import 'package:nashik/features/hotels/presentation/pages/hotels_screen.dart';
-import 'package:nashik/features/iternary/presentation/pages/iternary_page.dart';
-import 'package:nashik/features/profile/presentation/pages/profile_page.dart';
-import 'package:nashik/features/street_food/presentation/pages/street_food_screen.dart';
-import 'package:nashik/features/transport/presentation/pages/transport_screen.dart';
 
-class Approuter {
-  static final Approuter _instance = Approuter.init();
+/// App-level route observer for navigation tracking.
+/// Named to avoid shadowing Flutter's [RouteObserver] from material.dart.
+class AppRouteObserver extends NavigatorObserver {}
 
-  static final instance = _instance;
+/// Main application router configuration
+/// 
+/// This class manages all routing configuration for the app using GoRouter.
+/// Routes are organized by feature in separate files for better maintainability.
+class AppRouter {
+  // Singleton instance
+  static final AppRouter _instance = AppRouter._internal();
+  factory AppRouter() => _instance;
+  AppRouter._internal();
+
+  // Router instance
   static late final GoRouter router;
 
+  // Route observer
+  static final AppRouteObserver _routeObserver = AppRouteObserver();
+
+  // Navigator keys for different navigation contexts
   static final GlobalKey<NavigatorState> parentNavigatorKey =
       GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> homeTabNavigatorKey =
+  static final GlobalKey<NavigatorState> itineraryTabNavigatorKey =
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> categoryTabNavigatorKey =
       GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> itineraryTabNavigatorKey =
+  static final GlobalKey<NavigatorState> homeTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> eventsTabNavigatorKey =
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> profileTabNavigatorKey =
       GlobalKey<NavigatorState>();
 
-  Approuter.init() {
+  /// Initialize the router
+  /// 
+  /// This should be called once during app initialization in main.dart
+  static void init() {
     final List<RouteBase> routes = <RouteBase>[
-      StatefulShellRoute.indexedStack(
-        parentNavigatorKey: parentNavigatorKey,
-        pageBuilder: (context, state, navigationShell) => getPage(
-          child: BottomBarPage(shell: navigationShell),
-          state: state,
-        ),
-        branches: [
-          StatefulShellBranch(
-            navigatorKey: homeTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: HomeScreen.routePath,
-                name: HomeScreen.routeName,
-                pageBuilder: (context, state) =>
-                    getPage(child: const HomeScreen(), state: state),
-                routes: [
-                  GoRoute(
-                    path: 'street-food',
-                    name: StreetFoodScreen.routeName,
-                    pageBuilder: (context, state) =>
-                        getPage(child: const StreetFoodScreen(), state: state),
-                  ),
-                  GoRoute(
-                    path: 'transport',
-                    name: TransportScreen.routeName,
-                    pageBuilder: (context, state) =>
-                        getPage(child: const TransportScreen(), state: state),
-                  ),
-                  GoRoute(
-                    path: 'hotels',
-                    name: HotelsScreen.routeName,
-                    pageBuilder: (context, state) =>
-                        getPage(child: const HotelsScreen(), state: state),
-                  ),
-                  GoRoute(
-                    path: 'eatery',
-                    name: EateryScreen.routeName,
-                    pageBuilder: (context, state) =>
-                        getPage(child: const EateryScreen(), state: state),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: categoryTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: CategoryPage.routePath,
-                name: CategoryPage.routeName,
-                pageBuilder: (context, state) =>
-                    getPage(child: const CategoryPage(), state: state),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: itineraryTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: IternaryPage.routePath,
-                name: IternaryPage.routeName,
-                pageBuilder: (context, state) =>
-                    getPage(child: const IternaryPage(), state: state),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: profileTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: ProfilePage.routePath,
-                name: ProfilePage.routeName,
-                pageBuilder: (context, state) =>
-                    getPage(child: const ProfilePage(), state: state),
-              ),
-            ],
-          ),
-        ],
+      // Main tab navigation (bottom bar)
+      MainTabRoutes.getMainTabRoute(),
+      // Auth routes
+      ...AuthRoutes.getRoutes(),
+      // Feature routes
+      ...FeatureRoutes.getRoutes(),
+      // Utility routes
+      ...UtilityRoutes.getRoutes(),
+      // Wildcard route (404 handler)
+      GoRoute(
+        path: AppRoutePaths.notFound,
+        pageBuilder: (context, state) {
+          return getPage(child: const HomeScreen(), state: state);
+        },
       ),
     ];
+
     router = GoRouter(
-      initialLocation: HomeScreen.routePath,
+      initialLocation: AppRoutePaths.home,
       navigatorKey: parentNavigatorKey,
       routes: routes,
+      redirect: RouteRedirect.handleRedirect,
+      observers: [_routeObserver],
+      debugLogDiagnostics: kDebugMode,
     );
   }
-  static Page getPage({required Widget child, required GoRouterState state}) {
-    return MaterialPage(key: state.pageKey, child: child);
+
+  /// Create a MaterialPage for route configuration
+  /// 
+  /// This is a helper method to create consistent page configurations
+  /// across all routes.
+  static Page getPage({
+    required Widget child,
+    required GoRouterState state,
+  }) {
+    return MaterialPage(
+      key: state.pageKey,
+      child: child,
+      name: state.uri.toString(),
+      arguments: {'uri': state.uri},
+    );
   }
 }
 
+/// Extension on GoRouter for additional utility methods
 extension GoRouterExtension on GoRouter {
+  /// Get the current location
   String get location {
     final RouteMatch lastMatch = routerDelegate.currentConfiguration.last;
     final RouteMatchList matchList = lastMatch is ImperativeRouteMatch
@@ -129,9 +103,4 @@ extension GoRouterExtension on GoRouter {
     final String location = matchList.uri.toString();
     return location;
   }
-
-  Stream<String> get locationStream =>
-      Stream<String>.periodic(const Duration(seconds: 1), (computationCount) {
-        return Approuter.router.location;
-      });
 }

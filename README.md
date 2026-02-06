@@ -2,6 +2,12 @@
 
 A Flutter application for exploring Nashik.
 
+## Documentation
+
+- [Android Release Build Setup](./docs/ANDROID_RELEASE_BUILD_SETUP.md) - Guide for setting up release builds
+- [Native Auth Setup](./docs/NATIVE_AUTH_SETUP.md) - Google Sign-In and deep linking setup
+- [Clean Architecture Guide](./docs/CLEAN_ARCHITECTURE_GUIDE.md) - Architecture documentation
+
 ## Code Formatting and IDE Configuration
 
 The project uses Dart's built-in formatter and additional linting rules:
@@ -42,6 +48,7 @@ dart format --set-exit-if-changed .
 #### IDE Configuration
 
 The Cursor IDE is configured to automatically format Dart files:
+
 - **Format on Save**: Enabled
 - **Format on Paste**: Enabled
 - **Format on Type**: Enabled

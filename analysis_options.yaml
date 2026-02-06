@@ -72,7 +72,7 @@ linter:
     # prefer_final_parameters: true
     prefer_relative_imports: false
     sort_child_properties_last: true
-    sort_constructors_first: true
+    # sort_constructors_first: true
     sort_pub_dependencies: true
     sort_unnamed_constructors_first: true
     directives_ordering: true
