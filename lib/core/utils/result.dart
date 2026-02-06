@@ -1,11 +1,15 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:nashik/core/error/exceptions/api_exception.dart';
 import 'package:nashik/core/error/exceptions/app_exception.dart';
 import 'package:nashik/core/error/exceptions/network_exception.dart';
 import 'package:nashik/core/error/exceptions/server_exception.dart';
 import 'package:nashik/core/error/exceptions/validation_exception.dart';
+import 'package:nashik/core/error/failures/bad_request_failure.dart';
 import 'package:nashik/core/error/failures/failure.dart';
 import 'package:nashik/core/error/failures/network_failure.dart';
+import 'package:nashik/core/error/failures/not_found_failure.dart';
 import 'package:nashik/core/error/failures/server_failure.dart';
+import 'package:nashik/core/error/failures/unauthorized_failure.dart';
 import 'package:nashik/core/error/failures/validation_failure.dart';
 
 /// Type alias for Result - Either<Failure, T>
@@ -14,6 +18,23 @@ typedef Result<T> = Either<Failure, T>;
 
 /// Helper function to map exceptions to failures
 Failure mapExceptionToFailure(AppException exception) {
+  if (exception is ApiException) {
+    if (exception.isUnauthorized) {
+      return UnauthorizedFailure(message: exception.message);
+    }
+    if (exception.isNotFound) {
+      return NotFoundFailure(message: exception.message);
+    }
+    if (exception.isBadRequest) {
+      return BadRequestFailure(message: exception.message);
+    }
+    return ServerFailure(
+      message: exception.message,
+      code: exception.code,
+      statusCode: exception.statusCode,
+      data: exception.data,
+    );
+  }
   if (exception is ServerException) {
     return ServerFailure(
       message: exception.message,

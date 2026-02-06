@@ -6,6 +6,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
+  # Dart 3.5+ (Flutter 3.22+) required for Color.withValues() used in the codebase
   sdk: ^3.9.2
 
 dependencies:

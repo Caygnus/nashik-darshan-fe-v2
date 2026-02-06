@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
-import 'package:nashik/core/dio/config.dart';
-import 'package:nashik/core/error/exceptions/app_exception.dart';
-import 'package:nashik/core/error/exceptions/server_exception.dart';
+import 'package:nashik/core/error/exceptions/api_exception.dart';
+import 'package:nashik/core/network/api_client.dart';
+import 'package:nashik/core/network/api_endpoints.dart';
+import 'package:nashik/core/storage/secure_token_storage.dart';
 import 'package:nashik/features/auth/data/models/signup_request_model.dart';
 import 'package:nashik/features/auth/data/models/signup_response_model.dart';
 import 'package:nashik/features/auth/data/models/update_user_request_model.dart';
@@ -14,66 +14,83 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final DioClient dioClient;
+  AuthRemoteDataSourceImpl({
+    required ApiClient apiClient,
+    required SecureTokenStorage tokenStorage,
+  })  : _apiClient = apiClient,
+        _tokenStorage = tokenStorage;
 
-  AuthRemoteDataSourceImpl({required this.dioClient});
+  final ApiClient _apiClient;
+  final SecureTokenStorage _tokenStorage;
 
   @override
   Future<SignupResponseModel> signup(SignupRequestModel request) async {
-    try {
-      final response = await dioClient.post<Map<String, dynamic>>(
-        '/auth/signup',
-        data: request.toJson(),
-      );
-      return SignupResponseModel.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-    } on DioException {
-      rethrow;
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw ServerException(
-        message: 'Failed to sign up: ${e.toString()}',
-        code: 'UNEXPECTED_ERROR',
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      ApiEndpoints.authSignup,
+      data: request.toJson(),
+    );
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw ApiException(
+        message: _parseError(response.data),
+        statusCode: response.statusCode,
+        data: response.data,
       );
     }
+    final data = response.data as Map<String, dynamic>?;
+    if (data == null) {
+      throw const ApiException(message: 'Invalid signup response');
+    }
+    final model = SignupResponseModel.fromJson(data);
+    await _tokenStorage.setAccessToken(model.accessToken);
+    return model;
   }
 
   @override
   Future<UserModel> getCurrentUser() async {
-    try {
-      final response = await dioClient.get<Map<String, dynamic>>('/user/me');
-      return UserModel.fromJson(response.data as Map<String, dynamic>);
-    } on DioException {
-      rethrow;
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw ServerException(
-        message: 'Failed to get current user: ${e.toString()}',
-        code: 'UNEXPECTED_ERROR',
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.userMe,
+    );
+    if (response.statusCode != 200) {
+      throw ApiException(
+        message: _parseError(response.data),
+        statusCode: response.statusCode,
+        data: response.data,
       );
     }
+    final data = response.data as Map<String, dynamic>?;
+    if (data == null) {
+      throw const ApiException(message: 'Invalid user response');
+    }
+    return UserModel.fromJson(data);
   }
 
   @override
   Future<UserModel> updateUser(UpdateUserRequestModel request) async {
-    try {
-      final response = await dioClient.put<Map<String, dynamic>>(
-        '/user',
-        data: request.toJson(),
-      );
-      return UserModel.fromJson(response.data as Map<String, dynamic>);
-    } on DioException {
-      rethrow;
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw ServerException(
-        message: 'Failed to update user: ${e.toString()}',
-        code: 'UNEXPECTED_ERROR',
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      ApiEndpoints.user,
+      data: request.toJson(),
+    );
+    if (response.statusCode != 200) {
+      throw ApiException(
+        message: _parseError(response.data),
+        statusCode: response.statusCode,
+        data: response.data,
       );
     }
+    final data = response.data as Map<String, dynamic>?;
+    if (data == null) {
+      throw const ApiException(message: 'Invalid user response');
+    }
+    return UserModel.fromJson(data);
+  }
+
+  String _parseError(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final error = data['error'];
+      if (error is Map<String, dynamic>) {
+        return error['message'] as String? ?? 'Request failed';
+      }
+    }
+    return 'Request failed';
   }
 }
