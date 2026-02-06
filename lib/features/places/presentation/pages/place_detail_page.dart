@@ -1,0 +1,202 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../domain/entities/place.dart';
+import '../../domain/repositories/place_repository.dart';
+import '../../domain/use_cases/get_place_details.dart';
+import '../templates/adventure_place_detail_template.dart';
+import '../templates/culture_place_detail_template.dart';
+import '../templates/family_place_detail_template.dart';
+import '../templates/nature_place_detail_template.dart';
+import '../templates/shopping_place_detail_template.dart';
+import '../templates/spiritual_place_detail_template.dart';
+
+/// Place Detail Page
+/// Shows detailed information about a place.
+/// [placeRepository] is injected via DI (presentation depends on domain only).
+class PlaceDetailPage extends StatefulWidget {
+  const PlaceDetailPage({
+    super.key,
+    required this.placeId,
+    required this.placeRepository,
+  });
+
+  final String placeId;
+  final PlaceRepository placeRepository;
+
+  @override
+  State<PlaceDetailPage> createState() => _PlaceDetailPageState();
+}
+
+class _PlaceDetailPageState extends State<PlaceDetailPage> {
+  PlaceRepository get _repository => widget.placeRepository;
+  Place? _place;
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlace();
+  }
+
+  Future<void> _loadPlace() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final place = await GetPlaceDetails(_repository).call(widget.placeId);
+      if (!mounted) return;
+      setState(() {
+        _place = place;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = 'Something went wrong. Please try again.';
+      });
+    }
+  }
+
+  Widget _buildTemplate() {
+    if (_place == null) return const SizedBox.shrink();
+
+    final categoryId = _place!.categoryId.trim().toLowerCase();
+    switch (categoryId) {
+      case 'spiritual':
+        return SpiritualPlaceDetailTemplate(place: _place!);
+      case 'adventure':
+        return AdventurePlaceDetailTemplate(place: _place!);
+      case 'culture':
+        return CulturePlaceDetailTemplate(place: _place!);
+      case 'nature':
+        return NaturePlaceDetailTemplate(place: _place!);
+      case 'family':
+        return FamilyPlaceDetailTemplate(place: _place!);
+      case 'shopping':
+        return ShoppingPlaceDetailTemplate(place: _place!);
+      default:
+        return _buildDefaultTemplate();
+    }
+  }
+
+  Widget _buildDefaultTemplate() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Hero Image
+          Container(
+            width: double.infinity,
+            height: 250.h,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                  _place!.imageUrls.isNotEmpty
+                      ? _place!.imageUrls.first
+                      : 'assets/png/trambak.png',
+                ),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _place!.name,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1F2937),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  _place!.description,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14.sp,
+                    color: const Color(0xFF6B7280),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Display name for app bar (strip common suffixes, case-insensitive).
+  String get _appBarTitle {
+    if (_place == null) return 'Place Details';
+    var title = _place!.name;
+    for (final suffix in [' Temple', ' Jyotirlinga', ' Mall']) {
+      title = title.replaceAll(RegExp(RegExp.escape(suffix), caseSensitive: false), '');
+    }
+    return title;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          _appBarTitle,
+          style: GoogleFonts.montserrat(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _loadError != null
+              ? Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.w),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48.sp, color: Colors.grey),
+                        SizedBox(height: 16.h),
+                        Text(
+                          _loadError!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16.sp, color: const Color(0xFF6B7280)),
+                        ),
+                        SizedBox(height: 24.h),
+                        TextButton.icon(
+                          onPressed: _loadPlace,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : _place == null
+                  ? const Center(child: Text('Place not found'))
+                  : _buildTemplate(),
+    );
+  }
+}

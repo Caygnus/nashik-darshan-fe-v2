@@ -1,64 +1,110 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nashik/core/auth/google_auth_service.dart';
-import 'package:nashik/core/router/app_router.dart';
+import 'package:nashik/core/auth/unauthorized_notifier.dart';
 import 'package:nashik/core/supabase/config.dart';
-import 'package:nashik/features/auth/domain/usecases/get_current_user.dart';
-import 'package:nashik/features/auth/domain/usecases/signin_with_email.dart';
-import 'package:nashik/features/auth/domain/usecases/signup_with_email.dart';
+import 'package:nashik/features/auth/domain/params/signin_with_email_params.dart';
+import 'package:nashik/features/auth/domain/params/signup_with_email_params.dart';
+import 'package:nashik/features/auth/domain/entities/user.dart';
+import 'package:nashik/features/auth/domain/params/verify_email_params.dart';
+import 'package:nashik/features/auth/domain/use_cases/get_current_user.dart';
+import 'package:nashik/features/auth/domain/use_cases/reset_password.dart';
+import 'package:nashik/features/auth/domain/use_cases/sign_in_with_google.dart';
+import 'package:nashik/features/auth/domain/use_cases/sign_out.dart';
+import 'package:nashik/features/auth/domain/use_cases/signin_with_email.dart';
+import 'package:nashik/features/auth/domain/use_cases/signup_with_email.dart';
+import 'package:nashik/features/auth/domain/use_cases/verify_email.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
-import 'package:nashik/features/auth/presentation/pages/oauth_callback_page.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
+// Stream payload has .event (AuthChangeEvent) and .session (Session?) from Supabase auth
 
 class AuthCubit extends Cubit<AuthState> {
-  final SignupWithEmail signupWithEmail;
-  final SigninWithEmail signinWithEmail;
-  final GetCurrentUser getCurrentUser;
-
   AuthCubit({
-    required this.signupWithEmail,
-    required this.signinWithEmail,
-    required this.getCurrentUser,
-  }) : super(const AuthState.initial()) {
+    required SignupWithEmail signupWithEmail,
+    required SigninWithEmail signinWithEmail,
+    required GetCurrentUser getCurrentUser,
+    required SignOut signOut,
+    required SignInWithGoogle signInWithGoogle,
+    required ResetPassword resetPassword,
+    required VerifyEmail verifyEmail,
+    required UnauthorizedNotifier unauthorizedNotifier,
+  })  : _signupWithEmail = signupWithEmail,
+        _signinWithEmail = signinWithEmail,
+        _getCurrentUser = getCurrentUser,
+        _signOut = signOut,
+        _signInWithGoogle = signInWithGoogle,
+        _resetPassword = resetPassword,
+        _verifyEmail = verifyEmail,
+        _unauthorizedNotifier = unauthorizedNotifier,
+        super(const AuthState.initial()) {
+    unauthorizedNotifier.setCallback(this.signOut);
     _initializeAuthState();
+    _authSubscription = SupabaseConfig.client.auth.onAuthStateChange.listen(_onAuthStateChange);
   }
 
-  void _initializeAuthState() {
-    SupabaseConfig.client.auth.onAuthStateChange.listen((data) {
-      final AuthChangeEvent event = data.event;
-      final Session? session = data.session;
+  StreamSubscription<dynamic>? _authSubscription;
 
-      if (event == AuthChangeEvent.signedIn && session != null) {
-        try {
-          final currentLocation = Approuter.router.location;
-          if (!currentLocation.contains(OAuthCallbackPage.routePath)) {
-            _loadCurrentUser();
-          }
-        } catch (e) {
+  final SignupWithEmail _signupWithEmail;
+  final SigninWithEmail _signinWithEmail;
+  final GetCurrentUser _getCurrentUser;
+  final SignOut _signOut;
+  final SignInWithGoogle _signInWithGoogle;
+  final ResetPassword _resetPassword;
+  final VerifyEmail _verifyEmail;
+  final UnauthorizedNotifier _unauthorizedNotifier;
+
+  @override
+  Future<void> close() {
+    _authSubscription?.cancel();
+    _authSubscription = null;
+    _unauthorizedNotifier.clearCallback();
+    return super.close();
+  }
+
+  /// Handles Supabase auth state changes: session restore, sign-in, sign-out, token refresh.
+  void _onAuthStateChange(dynamic data) {
+    final event = data.event as AuthChangeEvent?;
+    if (event == null) return;
+    if (event == AuthChangeEvent.signedOut) {
+      emit(const AuthState.unauthenticated());
+      return;
+    }
+    if (event == AuthChangeEvent.initialSession ||
+        event == AuthChangeEvent.signedIn ||
+        event == AuthChangeEvent.tokenRefreshed) {
+      if (data.session != null) {
         _loadCurrentUser();
-        }
-      } else if (event == AuthChangeEvent.signedOut) {
+      } else {
         emit(const AuthState.unauthenticated());
       }
-    });
-
-    final user = SupabaseConfig.client.auth.currentUser;
-    if (user != null) {
-      _loadCurrentUser();
-    } else {
-      emit(const AuthState.unauthenticated());
     }
   }
 
-  Future<void> _loadCurrentUser() async {
-    final result = await getCurrentUser();
+  /// Initializes auth state from current session (app startup / session persistence).
+  void _initializeAuthState() async {
+    final result = await _getCurrentUser();
     result.fold(
-      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.unauthenticated()),
       (user) => emit(AuthState.authenticated(user)),
     );
   }
 
   void loadCurrentUser() {
     _loadCurrentUser();
+  }
+
+  /// Sets the authenticated user (e.g. after OAuth callback returns user).
+  /// Use this when you already have the user and want to avoid an extra getCurrentUser call.
+  void setAuthenticatedUser(User user) {
+    emit(AuthState.authenticated(user));
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final result = await _getCurrentUser();
+    result.fold(
+      (failure) => emit(const AuthState.unauthenticated()),
+      (user) => emit(AuthState.authenticated(user)),
+    );
   }
 
   Future<void> signUpWithEmail({
@@ -76,7 +122,7 @@ class AuthCubit extends Cubit<AuthState> {
       phone: phone,
     );
 
-    final result = await signupWithEmail(params);
+    final result = await _signupWithEmail(params);
 
     result.fold(
       (failure) => emit(AuthState.error(failure.message)),
@@ -92,7 +138,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     final params = SigninWithEmailParams(email: email, password: password);
 
-    final result = await signinWithEmail(params);
+    final result = await _signinWithEmail(params);
 
     result.fold(
       (failure) => emit(AuthState.error(failure.message)),
@@ -101,54 +147,37 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signInWithGoogle() async {
-    try {
-      emit(const AuthState.loading());
-      await GoogleAuthService().signInWithGoogle();
-    } catch (e) {
-      emit(AuthState.error('Failed to sign in with Google: ${e.toString()}'));
-    }
+    emit(const AuthState.loading());
+    final result = await _signInWithGoogle();
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.loading()),
+    );
   }
 
   Future<void> signOut() async {
-    try {
-      await GoogleAuthService().signOut();
-      emit(const AuthState.unauthenticated());
-    } catch (e) {
-      emit(AuthState.error('Failed to sign out: ${e.toString()}'));
-    }
+    final result = await _signOut();
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.unauthenticated()),
+    );
   }
 
   Future<void> resetPassword(String email) async {
-    try {
-      emit(const AuthState.loading());
-      await SupabaseConfig.client.auth.resetPasswordForEmail(
-        email,
-        redirectTo: 'com.caygnus.nashikdarshan://reset-password/',
-      );
-      emit(const AuthState.unauthenticated());
-    } catch (e) {
-      emit(
-        AuthState.error('Failed to send password reset email: ${e.toString()}'),
-      );
-    }
+    emit(const AuthState.loading());
+    final result = await _resetPassword(email);
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.unauthenticated()),
+    );
   }
 
   Future<void> verifyEmail(String token, String email) async {
-    try {
-      emit(const AuthState.loading());
-      final response = await SupabaseConfig.client.auth.verifyOTP(
-        type: OtpType.email,
-        token: token,
-        email: email,
-      );
-
-      if (response.session != null) {
-        await _loadCurrentUser();
-      } else {
-        emit(const AuthState.unauthenticated());
-      }
-    } catch (e) {
-      emit(AuthState.error('Failed to verify email: ${e.toString()}'));
-    }
+    emit(const AuthState.loading());
+    final result = await _verifyEmail(VerifyEmailParams(token: token, email: email));
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (user) => emit(AuthState.authenticated(user)),
+    );
   }
 }
