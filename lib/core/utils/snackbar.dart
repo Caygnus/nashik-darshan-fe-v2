@@ -48,12 +48,7 @@ class Snackbar {
           ],
         ),
         backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        elevation: 0,
+        behavior: SnackBarBehavior.fixed,
         duration: duration,
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       ),

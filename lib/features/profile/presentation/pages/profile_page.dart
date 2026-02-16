@@ -2,777 +2,532 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:nashik/core/auth/auth_guard.dart';
+import 'package:nashik/core/router/route_paths.dart';
+import 'package:nashik/core/router/route_names.dart';
 import 'package:nashik/core/theme/colors.dart';
-import 'package:nashik/core/utils/loading_overlay.dart';
-import 'package:nashik/core/utils/snackbar.dart';
-import 'package:nashik/features/auth/domain/entities/user.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:nashik/features/auth/presentation/cubit/auth_state.dart';
-import 'package:nashik/features/auth/presentation/pages/login_page.dart';
-import 'package:nashik/widgets/app_text.dart';
+import 'package:nashik/features/profile/presentation/cubit/profile_cubit.dart';
 
+/// Profile screen: guest sees "Login to access profile"; logged-in user sees data from GET /user/me.
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
+
   static const routeName = 'ProfilePage';
   static const routePath = '/ProfilePage';
 
-  void _handleLogout(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          title: H2('Logout'),
-          content: BodyText('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: BodyText(
-                'Cancel',
-                color: AppColors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.read<AuthCubit>().signOut();
-              },
-              child: BodyText(
-                'Logout',
-                color: AppColors.red,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        return authState.when(
+          initial: () => _buildGuestProfile(context),
+          loading: () => _buildGuestProfile(context),
+          authenticated: (_) => _buildAuthenticatedProfile(context),
+          unauthenticated: () => _buildGuestProfile(context),
+          error: (_) => _buildGuestProfile(context),
         );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) {
-        state.when(
-          initial: () {},
-          loading: () {},
-          authenticated: (_) {},
-          unauthenticated: () {
-            context.goNamed(LoginPage.routeName);
-          },
-          error: (String message) {
-            Snackbar.showError(message);
-          },
-        );
-      },
-      child: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, state) {
-          final isLoading = state.maybeWhen(
-            loading: () => true,
-            orElse: () => false,
-          );
-          return LoadingOverlay(
-            isLoading: isLoading,
-            message: isLoading ? 'Logging out...' : null,
-            child: Scaffold(
-              backgroundColor: const Color(0xFFF5F5F5),
-              appBar: AppBar(
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  color: AppColors.darkText,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                title: H1('Profile'),
-                centerTitle: true,
-                backgroundColor: Colors.white,
-                elevation: 0,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border),
-                    color: AppColors.darkText,
-                    onPressed: () {},
-                  ),
-                ],
+  Widget _buildGuestProfile(BuildContext context) {
+    return Container(
+      color: const Color(0xFFF8F8F8),
+      child: Column(
+        children: [
+          AppBar(
+            backgroundColor: AppColors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new,
+                size: 20.sp,
+                color: AppColors.darkText,
               ),
-              body: SafeArea(
-                child: BlocBuilder<AuthCubit, AuthState>(
-                  builder: (context, state) {
-                    return state.maybeWhen(
-                      authenticated: (user) =>
-                          _buildProfileContent(context, user),
-                      orElse: () => Center(
-                        child: BodyText('Please log in to view your profile'),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            title: Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkText,
+                fontFamily: GoogleFonts.roboto().fontFamily,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 64.r,
+                      color: AppColors.grey,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Login to access profile',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.darkText,
+                        fontFamily: GoogleFonts.roboto().fontFamily,
                       ),
-                    );
-                  },
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Sign in to view your profile, saved itineraries, and wishlist.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.grey,
+                        fontFamily: GoogleFonts.roboto().fontFamily,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    FilledButton(
+                      onPressed: () =>
+                          context.go(loginPathWithRedirect(AppRoutePaths.profile)),
+                      child: const Text('Login'),
+                    ),
+                  ],
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildProfileContent(BuildContext context, User user) {
-    // Mock data
-    const templesVisited = 12;
-    const spotsExplored = 8;
-    const tripsCompleted = 5;
-    const savedItineraries = 5;
-    const wishlistPlaces = 10;
-    const jyotirlingasVisited = 3;
-    const totalJyotirlingas = 12;
-    const badgesEarned = 2;
-    const dishesTried = 7;
-    const totalDishes = 10;
-    const greenPoints = 850;
-    const tripStreak = 7;
-    const streakProgress = 0.75;
+  Widget _buildAuthenticatedProfile(BuildContext context) {
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listener: (context, state) {},
+      buildWhen: (_, state) => true,
+      builder: (context, profileState) {
+        if (profileState is ProfileInitial || profileState is ProfileLoading) {
+          if (profileState is ProfileInitial) {
+            context.read<ProfileCubit>().loadUser();
+          }
+          return Container(
+            color: const Color(0xFFF8F8F8),
+            child: Column(
+              children: [
+                AppBar(
+                  backgroundColor: AppColors.white,
+                  elevation: 0,
+                  title: Text(
+                    'Profile',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkText,
+                      fontFamily: GoogleFonts.roboto().fontFamily,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            ),
+          );
+        }
+        if (profileState is ProfileError) {
+          return Container(
+            color: const Color(0xFFF8F8F8),
+            child: Column(
+              children: [
+                AppBar(
+                  backgroundColor: AppColors.white,
+                  elevation: 0,
+                  title: Text(
+                    'Profile',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkText,
+                      fontFamily: GoogleFonts.roboto().fontFamily,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Text(
+                        profileState.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        if (profileState is ProfileLoaded) {
+          return Container(
+            color: const Color(0xFFF8F8F8),
+            child: Column(
+              children: [
+                AppBar(
+                  backgroundColor: AppColors.white,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: Icon(
+                      Icons.arrow_back_ios_new,
+                      size: 20.sp,
+                      color: AppColors.darkText,
+                    ),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  ),
+                  title: Text(
+                    'Profile',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkText,
+                      fontFamily: GoogleFonts.roboto().fontFamily,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildProfileSummaryCard(
+                          context,
+                          name: profileState.user.name,
+                          phone: profileState.user.phone ?? '',
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildSavedAndWishlistSection(context),
+                        SizedBox(height: 16.h),
+                        _buildSettingsSection(context),
+                        SizedBox(height: 80.h),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
 
-    final recentTrips = [
-      {
-        'name': 'Trimbakeshwar Temple',
-        'date': 'Aug 15, 2024',
-        'image': Icons.temple_buddhist,
-      },
-      {
-        'name': 'Sula Vineyards',
-        'date': 'Jul 28, 2024',
-        'image': Icons.wine_bar,
-      },
-      {
-        'name': 'Pandav Leni Caves',
-        'date': 'Jul 10, 2024',
-        'image': Icons.landscape,
-      },
-    ];
+  Widget _buildProfileSummaryCard(
+    BuildContext context, {
+    required String name,
+    required String phone,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32.r,
+            backgroundColor: AppColors.lightGrey,
+            child: Icon(
+              Icons.person,
+              size: 40.r,
+              color: AppColors.grey,
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.isNotEmpty ? name : 'User',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkText,
+                    fontFamily: GoogleFonts.roboto().fontFamily,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  phone.isNotEmpty ? phone : '—',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.grey,
+                    fontFamily: GoogleFonts.roboto().fontFamily,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => context.pushNamed(AppRouteNames.editProfile),
+            icon: Icon(
+              Icons.edit,
+              size: 22.sp,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+  Widget _buildSavedAndWishlistSection(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 24.h),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Profile Header
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
+          Text(
+            'Saved & Wishlist',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkText,
+              fontFamily: GoogleFonts.roboto().fontFamily,
             ),
+          ),
+          SizedBox(height: 20.h),
+          SizedBox(
+            height: 98.h,
             child: Row(
               children: [
-                // Profile Avatar
-                Container(
-                  width: 72.w,
-                  height: 72.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    border: Border.all(color: AppColors.primary, width: 2),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 36.sp,
-                    color: AppColors.primary,
-                  ),
-                ),
-                SizedBox(width: 12.w),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      H1(user.name, maxLines: 1),
-                      SizedBox(height: 6.h),
-                      BodyText(
-                        'Spiritual Explorer',
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      SizedBox(height: 12.h),
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 4.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.flag,
-                                  size: 14.sp,
-                                  color: Colors.green,
-                                ),
-                                SizedBox(width: 4.w),
-                                Caption(
-                                  'Marathi',
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: BodyText(
-                              user.phone ?? '+91 98765 43210',
-                              color: AppColors.grey,
-                              fontWeight: FontWeight.w500,
-                              maxLines: 1,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Icon(
-                            Icons.edit,
-                            size: 16.sp,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  child: _buildWishlistCard(
+                  title: 'Saved Itineraries',
+                  icon: Icons.bookmark_rounded,
+                  iconColor: const Color(0xFF7C6FDB),
+                  backgroundColor: const Color(0xFFEDE9FC),
+                  onTap: () {
+                    context.pushNamed(AppRouteNames.savedItinerariesList);
+                  },
                 ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Travel Stats Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                H2('Travel Stats'),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        icon: Icons.temple_buddhist,
-                        count: templesVisited,
-                        label: 'Temples Visited',
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _buildStatItem(
-                        icon: Icons.landscape,
-                        count: spotsExplored,
-                        label: 'Spots Explored',
-                        color: Colors.green,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _buildStatItem(
-                        icon: Icons.luggage,
-                        count: tripsCompleted,
-                        label: 'Trips Completed',
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Recent Trips Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    H2('Recent Trips'),
-                    TextButton(
-                      onPressed: () {},
-                      child: BodyText(
-                        'View All',
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                ...recentTrips.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final trip = entry.value;
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: index < recentTrips.length - 1 ? 16.h : 0,
-                    ),
-                    child: _buildTripItem(
-                      name: trip['name'] as String,
-                      date: trip['date'] as String,
-                      icon: trip['image'] as IconData,
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Saved & Wishlist Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  height: 56.h,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.bookmark,
-                      color: Colors.white,
-                      size: 20.sp,
-                    ),
-                    label: ButtonText('$savedItineraries Saved Itineraries'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56.h,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.favorite,
-                      color: Colors.white,
-                      size: 20.sp,
-                    ),
-                    label: ButtonText('$wishlistPlaces Wishlist Places'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Nashik Journey Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                H2('Nashik Journey'),
-                SizedBox(height: 16.h),
-                _buildJourneyItem(
-                  icon: Icons.temple_buddhist,
-                  label: 'Pilgrimage Tracker',
-                  subtitle:
-                      '$jyotirlingasVisited of $totalJyotirlingas Jyotirlingas visited',
-                  progress: jyotirlingasVisited / totalJyotirlingas,
-                  progressText:
-                      '${((jyotirlingasVisited / totalJyotirlingas) * 100).toInt()}%',
-                  iconColor: AppColors.primary,
-                ),
-                SizedBox(height: 16.h),
-                _buildJourneyItem(
-                  icon: Icons.emoji_events,
-                  label: 'Festival Badges',
-                  subtitle: '$badgesEarned badges earned',
-                  badges: List.generate(badgesEarned, (index) => Colors.amber),
-                  iconColor: Colors.amber,
-                ),
-                SizedBox(height: 16.h),
-                _buildJourneyItem(
-                  icon: Icons.restaurant,
-                  label: 'Food Journey',
-                  subtitle: '$dishesTried local dishes tried',
-                  progress: dishesTried / totalDishes,
-                  progressText:
-                      '${((dishesTried / totalDishes) * 100).toInt()}%',
-                  iconColor: Colors.red,
-                ),
-                SizedBox(height: 16.h),
-                _buildJourneyItem(
-                  icon: Icons.eco,
-                  label: 'Green Points',
-                  subtitle: 'Eco-friendly travel score',
-                  points: greenPoints,
-                  iconColor: Colors.green,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Achievements Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                H2('Achievements'),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: _buildAchievementBadge(
-                        icon: Icons.workspace_premium,
-                        label: 'Temple Explorer',
-                        color: Colors.amber,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _buildAchievementBadge(
-                        icon: Icons.restaurant,
-                        label: 'Foodie',
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _buildAchievementBadge(
-                        icon: Icons.eco,
-                        label: 'Eco Traveler',
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Settings Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                H2('Settings'),
-                SizedBox(height: 16.h),
-                _buildSettingItem(Icons.privacy_tip, 'Privacy Settings'),
-                _buildSettingItem(
-                  Icons.language,
-                  'Language',
-                  subtitle: 'English',
-                ),
-                _buildSettingItem(Icons.accessibility, 'Accessibility'),
-                _buildSettingItem(Icons.download, 'Export Data'),
-                _buildSettingItem(
-                  Icons.delete_outline,
-                  'Delete Account',
-                  textColor: AppColors.red,
-                ),
-                SizedBox(height: 8.h),
-                _buildSettingItem(
-                  Icons.logout,
-                  'Logout',
-                  textColor: AppColors.red,
-                  onTap: () => _handleLogout(context),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Trip Streak Card
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    H2('Trip Streak', color: Colors.white),
-                    H2('$tripStreak Days', color: Colors.white),
-                  ],
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _buildWishlistCard(
+                  title: 'Wishlist',
+                  icon: Icons.favorite_rounded,
+                  iconColor: const Color(0xFFE85D75),
+                  backgroundColor: const Color(0xFFFCE8EC),
+                  onTap: () => context.pushNamed(AppRouteNames.wishlist),
                 ),
-                SizedBox(height: 10.h),
-                BodyText(
-                  'Keep exploring Nashik!',
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w500,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _buildWishlistCard(
+                  title: 'Spiritual Stories',
+                  icon: Icons.menu_book_rounded,
+                  iconColor: const Color(0xFF5B8DEE),
+                  backgroundColor: const Color(0xFFE8F0FE),
+                  onTap: () => context.pushNamed(AppRouteNames.savedSpiritualStories),
                 ),
-                SizedBox(height: 16.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4.r),
-                        child: LinearProgressIndicator(
-                          value: streakProgress,
-                          backgroundColor: Colors.white.withValues(alpha: 0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                          minHeight: 8.h,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    BodyText(
-                      '${(streakProgress * 100).toInt()}%',
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ],
                 ),
               ],
             ),
           ),
-          SizedBox(height: 16.h),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem({
+  Widget _buildWishlistCard({
+    required String title,
     required IconData icon,
-    required int count,
-    required String label,
-    required Color color,
+    required Color iconColor,
+    required Color backgroundColor,
+    required VoidCallback onTap,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 56.w,
-          height: 56.w,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 10.h),
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withValues(alpha: 0.1),
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(8.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: Icon(icon, color: color, size: 28.sp),
-        ),
-        SizedBox(height: 8.h),
-        H1(count.toString(), maxLines: 1, textAlign: TextAlign.center),
-        SizedBox(height: 4.h),
-        Caption(
-          label,
-          fontWeight: FontWeight.w500,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTripItem({
-    required String name,
-    required String date,
-    required IconData icon,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 56.w,
-          height: 56.w,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 28.sp),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              H3(name, maxLines: 1),
-              SizedBox(height: 6.h),
-              Subtitle(date),
+              Icon(icon, size: 26.sp, color: iconColor),
+              SizedBox(height: 8.h),
+              Flexible(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.darkText,
+                    fontFamily: GoogleFonts.roboto().fontFamily,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        Icon(Icons.chevron_right, color: AppColors.grey, size: 24.sp),
-      ],
+      ),
     );
   }
 
-  Widget _buildJourneyItem({
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    double? progress,
-    String? progressText,
-    int? points,
-    List<Color>? badges,
-    required Color iconColor,
-  }) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: iconColor, size: 24.sp),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  H3(label, maxLines: 1),
-                  SizedBox(height: 6.h),
-                  Subtitle(subtitle),
-                ],
-              ),
+  Widget _buildSettingsSection(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Settings',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkText,
+              fontFamily: GoogleFonts.roboto().fontFamily,
             ),
-            if (progress != null && progressText != null)
-              BodyText(progressText, fontWeight: FontWeight.bold)
-            else if (points != null)
-              H3(points.toString(), color: Colors.green)
-            else if (badges != null)
-              Row(
-                children: badges
-                    .map(
-                      (color) => Container(
-                        margin: EdgeInsets.only(left: 4.w),
-                        width: 24.w,
-                        height: 24.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: color,
+          ),
+          SizedBox(height: 12.h),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                // TODO: Navigate to privacy settings
+              },
+              borderRadius: BorderRadius.circular(12.r),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 22.sp,
+                      color: AppColors.darkText,
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Privacy Settings',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.darkText,
+                          fontFamily: GoogleFonts.roboto().fontFamily,
                         ),
                       ),
-                    )
-                    .toList(),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14.sp,
+                      color: AppColors.grey,
+                    ),
+                  ],
+                ),
               ),
-          ],
-        ),
-        if (progress != null) ...[
-          SizedBox(height: 8.h),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4.r),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: iconColor.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-              minHeight: 6.h,
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async {
+                await context.read<AuthCubit>().signOut();
+                if (context.mounted) context.goNamed(AppRouteNames.home);
+              },
+              borderRadius: BorderRadius.circular(12.r),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout,
+                      size: 22.sp,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Log out',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primary,
+                          fontFamily: GoogleFonts.roboto().fontFamily,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
-      ],
-    );
-  }
-
-  Widget _buildAchievementBadge({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 64.w,
-          height: 64.w,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Icon(icon, color: color, size: 32.sp),
-        ),
-        SizedBox(height: 8.h),
-        Caption(
-          label,
-          fontWeight: FontWeight.w600,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingItem(
-    IconData icon,
-    String title, {
-    String? subtitle,
-    Color? textColor,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8.r),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 12.h),
-        child: Row(
-          children: [
-            Icon(icon, color: textColor ?? AppColors.grey, size: 24.sp),
-            SizedBox(width: 16.w),
-            Expanded(child: H3(title, color: textColor ?? AppColors.darkText)),
-            if (subtitle != null)
-              BodyText(
-                subtitle,
-                color: AppColors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            SizedBox(width: 8.w),
-            Icon(Icons.chevron_right, color: AppColors.grey, size: 20.sp),
-          ],
-        ),
       ),
     );
   }

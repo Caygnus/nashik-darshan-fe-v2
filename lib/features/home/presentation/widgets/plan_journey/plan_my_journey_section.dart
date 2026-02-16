@@ -117,7 +117,12 @@ class _PlanMyJourneySectionState extends State<PlanMyJourneySection> {
         child: Container(
           height: 37.h,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF667EEA) : Colors.white,
+
+            gradient: isSelected ? const LinearGradient(
+                  colors: [Color(0xFFFF934D), Color(0xFFFFB247)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ) : null,
             border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
             borderRadius: BorderRadius.circular(9999.r),
           ),
@@ -149,7 +154,11 @@ class _PlanMyJourneySectionState extends State<PlanMyJourneySection> {
         child: Container(
           height: 37.h,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF667EEA) : Colors.white,
+            gradient: isSelected ? const LinearGradient(
+                  colors: [Color(0xFFFF934D), Color(0xFFFFB247)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ) : null,
             border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
             borderRadius: BorderRadius.circular(9999.r),
           ),

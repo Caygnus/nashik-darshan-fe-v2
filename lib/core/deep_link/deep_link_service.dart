@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
+import 'package:nashik/core/deep_link/deep_link_type.dart';
 import 'package:nashik/core/router/app_router.dart';
 
 class DeepLinkService {
@@ -22,19 +23,17 @@ class DeepLinkService {
   }
 
   Future<void> _handleDeepLink(Uri uri) async {
-    if (uri.scheme != 'com.caygnus.nashikdarshan') {
+    if (uri.scheme != DeepLinkType.scheme) {
       return;
     }
 
     final deepLinkType = DeepLinkType.fromUri(uri);
     final routePath = deepLinkType.getRoutePath(uri);
 
-    if (routePath != null) {
-      if (deepLinkType == DeepLinkType.test) {
-        debugPrint('✅ Test deep link received! Deep linking is working.');
-      }
-      Approuter.router.go(routePath);
+    if (deepLinkType == DeepLinkType.test) {
+      debugPrint('✅ Test deep link received! Deep linking is working.');
     }
+    AppRouter.router.go(routePath);
   }
 
   Future<Uri?> getInitialLink() async {

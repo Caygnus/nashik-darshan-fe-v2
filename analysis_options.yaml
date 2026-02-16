@@ -10,9 +10,6 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  plugins:
-    - dart_code_metrics
-
   # Enable strong mode and null safety
   language:
     strict-casts: true
@@ -31,10 +28,12 @@ analyzer:
     undefined_method: error
     # Treat undefined operators as errors
     undefined_operator: error
-    # Treat deprecated members as warnings
-    deprecated_member_use: warning
-    # Treat invalid_annotation_target as warnings
-    invalid_annotation_target: warning
+    # Treat deprecated members as info (fix over time: use .withValues() instead of .withOpacity)
+    deprecated_member_use: info
+    # Treat invalid_annotation_target as info
+    invalid_annotation_target: info
+    unnecessary_cast: info
+    unused_element: info
     strict_raw_type: ignore
 
   # Exclude generated files and build outputs from analysis

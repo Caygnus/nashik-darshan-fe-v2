@@ -80,7 +80,7 @@ class DioClient {
   /// POST request
   Future<Response<T>> post<T>(
     String endpoint, {
-    final data,
+    dynamic data,
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
@@ -376,7 +376,7 @@ class _ErrorInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       log('Unauthorized access - token may be expired or invalid');
       // Sign out asynchronously without blocking error handling
-      SupabaseConfig.client.auth.signOut().catchError((final e) {
+      SupabaseConfig.client.auth.signOut().catchError((Object e) {
         log('Error signing out from Supabase: $e');
       });
     }
