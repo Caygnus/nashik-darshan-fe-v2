@@ -49,7 +49,7 @@ class ListingCardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -106,7 +106,7 @@ class ListingCardWidget extends StatelessWidget {
                     width: 36.w,
                     height: 36.h,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: const Color(0xFFE5E7EB),

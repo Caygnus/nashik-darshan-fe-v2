@@ -1,11 +1,13 @@
 /// Place entity
-/// Represents a place/attraction in Nashik
+/// Represents a place/attraction in Nashik (aligned with /places API).
 class Place {
   final String id;
   final String name;
   final String description;
   final String categoryId;
   final List<String> imageUrls;
+  final String? subtitle;
+  final String? placeType;
   final String? address;
   final double? latitude;
   final double? longitude;
@@ -19,6 +21,8 @@ class Place {
     required this.description,
     required this.categoryId,
     required List<String> imageUrls,
+    this.subtitle,
+    this.placeType,
     this.address,
     this.latitude,
     this.longitude,

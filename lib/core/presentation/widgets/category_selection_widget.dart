@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 class CategorySelectionWidget extends StatelessWidget {
   final List<String> categories;
   final String selectedCategory;
-  final Function(String) onCategorySelected;
+  final void Function(String) onCategorySelected;
 
   const CategorySelectionWidget({
     super.key,

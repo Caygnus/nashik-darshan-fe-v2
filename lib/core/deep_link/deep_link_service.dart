@@ -30,12 +30,10 @@ class DeepLinkService {
     final deepLinkType = DeepLinkType.fromUri(uri);
     final routePath = deepLinkType.getRoutePath(uri);
 
-    if (routePath != null) {
-      if (deepLinkType == DeepLinkType.test) {
-        debugPrint('✅ Test deep link received! Deep linking is working.');
-      }
-      AppRouter.router.go(routePath);
+    if (deepLinkType == DeepLinkType.test) {
+      debugPrint('✅ Test deep link received! Deep linking is working.');
     }
+    AppRouter.router.go(routePath);
   }
 
   Future<Uri?> getInitialLink() async {

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nashik/core/router/route_names.dart';
+import 'package:nashik/features/category/domain/entities/category_entity.dart';
+import 'package:nashik/features/category/domain/usecases/get_category_by_id.dart';
 
 import '../../domain/entities/category.dart';
 import '../../domain/entities/place.dart';
@@ -25,17 +28,20 @@ TextStyle _getTextStyle({
 }
 
 /// Category Detail Page
-/// Shows comprehensive category information with tabs and sections.
-/// [placeRepository] is injected via DI (presentation depends on domain only).
+/// Shows comprehensive category information. For API categories (id starting with
+/// "category_"), shows dynamic hero (image_url) and description; otherwise
+/// uses place repository (mock) and existing layouts.
 class CategoryDetailPage extends StatefulWidget {
   const CategoryDetailPage({
     super.key,
     required this.categoryId,
     required this.placeRepository,
+    required this.getCategoryById,
   });
 
   final String categoryId;
   final PlaceRepository placeRepository;
+  final GetCategoryById getCategoryById;
 
   @override
   State<CategoryDetailPage> createState() => _CategoryDetailPageState();
@@ -44,6 +50,7 @@ class CategoryDetailPage extends StatefulWidget {
 class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTickerProviderStateMixin {
   PlaceRepository get _repository => widget.placeRepository;
   Category? _category;
+  CategoryEntity? _apiCategory;
   List<Place> _places = [];
   bool _isLoading = true;
   // Main scroll controller
@@ -236,14 +243,49 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
     setState(() => _isLoading = true);
 
     try {
+      // API categories have id like "category_01KGMK7DN65HEAFYXWDRG9X4FM"
+      if (widget.categoryId.startsWith('category_')) {
+        final result = await widget.getCategoryById(widget.categoryId);
+        if (!mounted) return;
+        CategoryEntity? apiCat;
+        result.fold(
+          (failure) => apiCat = null,
+          (CategoryEntity c) => apiCat = c,
+        );
+        List<Place> places = [];
+        if (apiCat != null) {
+          final placesResult = await _repository.getPlaces(
+            categoryId: widget.categoryId,
+            limit: 100,
+            status: 'published',
+          );
+          if (mounted) {
+            placesResult.fold(
+              (failure) => places = [],
+              (placeListResult) => places = placeListResult.items,
+            );
+          }
+        }
+        if (!mounted) return;
+        setState(() {
+          _apiCategory = apiCat;
+          _category = null;
+          _places = places;
+          _isLoading = false;
+        });
+        _initializeScrollControllers();
+        _ensureApiPlaceTypeScrollControllers(places);
+        return;
+      }
+
       final category = await GetCategoryDetails(_repository).call(widget.categoryId);
       final places = await GetPlacesByCategory(_repository).call(widget.categoryId);
 
-      // Initialize scroll controllers for carousels
       _initializeScrollControllers();
 
       if (mounted) {
         setState(() {
+          _apiCategory = null;
           _category = category;
           _places = places;
           _isLoading = false;
@@ -258,13 +300,35 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
   }
 
   void _initializeScrollControllers() {
-    final carouselKeys = ['temples', 'caves', 'ghats'];
+    final carouselKeys = ['temples', 'caves', 'ghats', 'api-places'];
     for (var key in carouselKeys) {
-      _scrollControllers[key] = ScrollController();
-      _currentPageIndices[key] = 0;
-      _scrollControllers[key]!.addListener(() {
-        _updatePageIndex(key);
-      });
+      if (!_scrollControllers.containsKey(key)) {
+        _scrollControllers[key] = ScrollController();
+        _currentPageIndices[key] = 0;
+        _scrollControllers[key]!.addListener(() {
+          _updatePageIndex(key);
+        });
+      }
+    }
+  }
+
+  /// Ensure scroll controllers exist for each place_type when showing API category places.
+  void _ensureApiPlaceTypeScrollControllers(List<Place> places) {
+    final types = places
+        .map((p) => p.placeType?.toLowerCase().trim())
+        .whereType<String>()
+        .where((t) => t.isNotEmpty)
+        .toSet()
+        .toList();
+    for (final type in types) {
+      final key = 'api_$type';
+      if (!_scrollControllers.containsKey(key)) {
+        _scrollControllers[key] = ScrollController();
+        _currentPageIndices[key] = 0;
+        _scrollControllers[key]!.addListener(() {
+          _updatePageIndex(key);
+        });
+      }
     }
   }
 
@@ -307,7 +371,7 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
               onPressed: () => context.pop(),
             ),
             title: Text(
-              _category?.name ?? 'Category',
+              _apiCategory?.name ?? _category?.name ?? 'Category',
               style: _getTextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w600,
@@ -322,9 +386,618 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> with SingleTick
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _category == null
-              ? const Center(child: Text('Category not found'))
-              : _buildBody(),
+          : _apiCategory != null
+              ? _buildApiCategoryPage()
+              : _category == null
+                  ? const Center(child: Text('Category not found'))
+                  : _buildBody(),
+    );
+  }
+
+  /// Page for API-sourced categories: UI like the reference image — Hero, Search bar, then place cards in horizontal sections.
+  Widget _buildApiCategoryPage() {
+    final c = _apiCategory!;
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildApiCategoryHeroSection(c.imageUrl),
+          Transform.translate(
+            offset: Offset(0, -20.h),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20.r),
+                  topRight: Radius.circular(20.r),
+                  bottomLeft: Radius.zero,
+                  bottomRight: Radius.zero,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Search bar directly below hero (like the image)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 24.h),
+                    child: Container(
+                      height: 48.h,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: const Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.search,
+                            color: const Color(0xFF9CA3AF),
+                            size: 20.sp,
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search ${c.name.toLowerCase()} places...',
+                                hintStyle: _getTextStyle(
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFF9CA3AF),
+                                ),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
+                              style: _getTextStyle(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF1F2937),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Places section: header with icon + "View more", then horizontal cards
+                  _buildApiCategoryPlacesSection(),
+                  SizedBox(height: 80.h),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Section header with icon, title, and "View more" (orange) — matches reference image.
+  Widget _buildApiSectionHeader({
+    required IconData icon,
+    required String title,
+    Color iconColor = const Color(0xFFF97316),
+    Color? titleColor,
+  }) {
+    final color = titleColor ?? iconColor;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 24.sp),
+              SizedBox(width: 8.w),
+              Text(
+                title,
+                style: _getTextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'View more',
+            style: _getTextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFF97316),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const List<String> _placeTypeOrder = ['temple', 'cave', 'ghat'];
+  static String _sectionTitleForPlaceType(String type) {
+    switch (type.toLowerCase()) {
+      case 'temple':
+        return 'Temples';
+      case 'cave':
+        return 'Sacred Caves';
+      case 'ghat':
+        return 'Holy Ghats';
+      default:
+        return type.isEmpty ? 'Places' : (type.length > 1 ? '${type[0].toUpperCase()}${type.substring(1)}' : type.toUpperCase());
+    }
+  }
+
+  static IconData _iconForPlaceType(String type) {
+    switch (type.toLowerCase()) {
+      case 'temple':
+        return Icons.temple_buddhist;
+      case 'cave':
+        return Icons.landscape;
+      case 'ghat':
+        return Icons.water_drop;
+      default:
+        return Icons.place;
+    }
+  }
+
+  static Color _colorForPlaceType(String type) {
+    switch (type.toLowerCase()) {
+      case 'temple':
+        return const Color(0xFFF97316);
+      case 'cave':
+        return const Color(0xFF22C55E);
+      case 'ghat':
+        return const Color(0xFF3B82F6);
+      default:
+        return const Color(0xFFF97316);
+    }
+  }
+
+  /// Group places by place_type; show Temples, Sacred Caves, Holy Ghats sections with carousels.
+  Widget _buildApiCategoryPlacesSection() {
+    final places = _places;
+    if (places.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+        child: Text(
+          'No places in this category yet.',
+          style: _getTextStyle(
+            fontSize: 14.sp,
+            color: const Color(0xFF6B7280),
+          ),
+        ),
+      );
+    }
+
+    final grouped = <String, List<Place>>{};
+    for (final p in places) {
+      final type = (p.placeType ?? 'other').toLowerCase().trim();
+      final key = type.isEmpty ? 'other' : type;
+      grouped.putIfAbsent(key, () => []).add(p);
+    }
+
+    final orderedTypes = <String>[];
+    for (final t in _placeTypeOrder) {
+      if (grouped.containsKey(t)) orderedTypes.add(t);
+    }
+    for (final k in grouped.keys) {
+      if (!_placeTypeOrder.contains(k)) orderedTypes.add(k);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final placeType in orderedTypes) ...[
+          _buildApiSectionHeader(
+            icon: _iconForPlaceType(placeType),
+            title: _sectionTitleForPlaceType(placeType),
+            iconColor: _colorForPlaceType(placeType),
+            titleColor: _colorForPlaceType(placeType),
+          ),
+          SizedBox(height: 16.h),
+          _buildApiPlaceCarousel(
+            places: grouped[placeType]!,
+            carouselKey: 'api_$placeType',
+          ),
+          SizedBox(height: 32.h),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildApiPlaceCarousel({
+    required List<Place> places,
+    required String carouselKey,
+  }) {
+    final controller = _scrollControllers[carouselKey] ?? ScrollController();
+    final currentPage = _currentPageIndices[carouselKey] ?? 0;
+    final dotCount = places.length > 5 ? 5 : places.length.clamp(1, 10);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 220.h,
+          child: ListView.builder(
+            controller: controller,
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            itemCount: places.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(right: 12.w),
+                child: _buildApiPlaceCard(places[index]),
+              );
+            },
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            dotCount,
+            (index) => Container(
+              width: 8.w,
+              height: 8.h,
+              margin: EdgeInsets.symmetric(horizontal: 4.w),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: currentPage == index
+                    ? const Color(0xFF000000)
+                    : const Color(0xFFD9D9D9),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Single place card for API category: image background, title (bold), subtitle — matches Sacred Places card design.
+  Widget _buildApiPlaceCard(Place place) {
+    final imageUrl = place.imageUrls.isNotEmpty ? place.imageUrls.first : null;
+    final subtitleText = place.subtitle?.trim() ?? place.description.trim();
+    const cardWidth = 160.0;
+    const cardHeight = 220.0; // ~3:4 aspect for slightly taller-than-wide card
+
+    return GestureDetector(
+      onTap: () {
+        context.pushNamed(
+          AppRouteNames.placeDetail,
+          pathParameters: {'placeId': place.id},
+        );
+      },
+      child: Container(
+        width: cardWidth.w,
+        height: cardHeight.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background image (primary_image_url / thumbnail_url from API)
+              if (imageUrl != null && imageUrl.isNotEmpty)
+                Image.network(
+                  imageUrl,
+                  width: cardWidth.w,
+                  height: cardHeight.h,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _buildPlaceCardPlaceholder(cardWidth, cardHeight),
+                )
+              else
+                _buildPlaceCardPlaceholder(cardWidth, cardHeight),
+              // Gradient overlay at bottom for text readability
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.75),
+                    ],
+                    stops: const [0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+              // Two lines at bottom (like Sacred Places image: first line subtitle/Hindi, second line title/English from API)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(12.w, 24.h, 12.w, 12.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (subtitleText.isNotEmpty) ...[
+                        Text(
+                          subtitleText,
+                          style: _getTextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.95),
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4.h),
+                      ],
+                      Text(
+                        place.name,
+                        style: _getTextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 1.25,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceCardPlaceholder([double width = 160, double height = 220]) {
+    return Container(
+      width: width.w,
+      height: height.h,
+      color: const Color(0xFFF3F4F6),
+      child: Icon(
+        Icons.image_not_supported,
+        size: 40.sp,
+        color: Colors.grey,
+      ),
+    );
+  }
+
+  /// Hero section for API category: same layout as [_buildHeroSection] with dynamic [imageUrl].
+  Widget _buildApiCategoryHeroSection(String? imageUrl) {
+    return Container(
+      width: double.infinity,
+      height: 350.h,
+      decoration: BoxDecoration(
+        image: imageUrl != null && imageUrl.isNotEmpty
+            ? DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
+        color: const Color(0xFFF3F4F6),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.3),
+              Colors.black.withValues(alpha: 0.6),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'Experience the Divine Essence of Nashik',
+                style: _getTextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.2,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'City of Faith & Spirituality Side',
+                style: _getTextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                  height: 1.3,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                children: [
+                  _buildBulletPoint('Caves'),
+                  SizedBox(width: 8.w),
+                  _buildBulletPoint('Jyotirling'),
+                  SizedBox(width: 8.w),
+                  _buildBulletPoint('Holy Ghats'),
+                  SizedBox(width: 8.w),
+                  _buildBulletPoint('Temples'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// About section for API category: same UI as [_buildAboutTab] with ॐ icon, stats card, search icon, description from API.
+  Widget _buildApiCategoryAboutSection() {
+    final c = _apiCategory!;
+    final aboutBody =
+        c.description ?? 'Discover the spiritual and cultural heritage of Nashik.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'About',
+                style: _getTextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1F2937),
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                aboutBody,
+                style: _getTextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF6B7280),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+        Center(
+          child: Container(
+            width: 358.w,
+            height: 112.h,
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFEDD5),
+                  Color(0xFFFEE2E2),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(
+                color: const Color(0xFFE5E7EB),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'ॐ',
+                  style: TextStyle(
+                    fontSize: 40.sp,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '50+ Sacred Sites',
+                        style: _getTextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2937),
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Centuries of devotion and faith',
+                        style: _getTextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 24.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Container(
+            height: 48.h,
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search,
+                  color: const Color(0xFF9CA3AF),
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search spiritual places...',
+                      hintStyle: _getTextStyle(
+                        fontSize: 14.sp,
+                        color: const Color(0xFF9CA3AF),
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                    ),
+                    style: _getTextStyle(
+                      fontSize: 14.sp,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 32.h),
+        _buildLiveAartiTimings(),
+        SizedBox(height: 32.h),
+        _buildVisitorInformation(),
+      ],
     );
   }
 

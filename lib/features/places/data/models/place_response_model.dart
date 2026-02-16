@@ -217,6 +217,8 @@ class PlaceResponseModel {
       description: desc,
       categoryId: categoryId,
       imageUrls: urls,
+      subtitle: subtitle,
+      placeType: placeType,
       address: addressStr,
       latitude: location?.latitude,
       longitude: location?.longitude,

@@ -27,6 +27,7 @@ class PlaceRepositoryImpl extends BaseRepository implements PlaceRepository {
     String? order,
     List<String>? slug,
     List<String>? placeTypes,
+    String? categoryId,
     String? searchQuery,
     double? minRatingAvg,
     int? minRatingCount,
@@ -52,6 +53,7 @@ class PlaceRepositoryImpl extends BaseRepository implements PlaceRepository {
         order: order,
         slug: slug,
         placeTypes: placeTypes,
+        categoryId: categoryId,
         searchQuery: searchQuery,
         minRatingAvg: minRatingAvg,
         minRatingCount: minRatingCount,
@@ -60,7 +62,10 @@ class PlaceRepositoryImpl extends BaseRepository implements PlaceRepository {
         endTime: endTime,
         expand: expand,
       );
-      final items = response.items.map((e) => e.toEntity()).toList();
+      final items = response.items
+          .where((e) => e.status == 'published')
+          .map((e) => e.toEntity())
+          .toList();
       final total = response.pagination.total ?? items.length;
       return PlaceListResult(items, total);
     });

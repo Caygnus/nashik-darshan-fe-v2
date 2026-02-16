@@ -8,6 +8,7 @@ import 'package:nashik/features/category/presentation/pages/category_page.dart';
 import 'package:nashik/features/events/presentation/pages/events_page.dart';
 import 'package:nashik/features/home/presentation/pages/home_screen.dart';
 import 'package:nashik/features/itinerary/presentation/pages/itinerary_page.dart';
+import 'package:nashik/features/category/domain/usecases/get_categories.dart';
 import 'package:nashik/features/places/domain/repositories/place_repository.dart';
 import 'package:nashik/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:nashik/features/profile/presentation/pages/profile_page.dart';
@@ -50,6 +51,7 @@ class MainTabRoutes {
               name: AppRouteNames.category,
               pageBuilder: (context, state) => AppRouter.getPage(
                 child: CategoryPage(
+                  getCategories: locator<GetCategories>(),
                   placeRepository: locator<PlaceRepository>(),
                 ),
                 state: state,

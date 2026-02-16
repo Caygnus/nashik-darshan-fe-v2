@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 class FilterButtonsWidget extends StatelessWidget {
   final List<String> filters;
   final String selectedFilter;
-  final Function(String) onFilterSelected;
+  final void Function(String) onFilterSelected;
 
   const FilterButtonsWidget({
     super.key,

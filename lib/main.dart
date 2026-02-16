@@ -2,7 +2,6 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nashik/android_app.dart';
@@ -43,7 +42,7 @@ void main() async {
     AppRouter.init();
 
     runApp(const MyApp());
-  } catch (e, st) {
+  } on Object catch (e, st) {
     developer.log('App bootstrap failed', error: e, stackTrace: st);
     runApp(_BootstrapErrorApp(message: e.toString()));
   }

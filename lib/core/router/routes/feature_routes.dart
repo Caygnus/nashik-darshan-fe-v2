@@ -17,6 +17,7 @@ import 'package:nashik/features/itinerary/presentation/pages/itinerary_detail_pa
 import 'package:nashik/features/itinerary/presentation/pages/my_itineraries_page.dart';
 import 'package:nashik/features/itinerary/presentation/pages/saved_itineraries_page.dart';
 import 'package:nashik/features/itinerary/presentation/pages/saved_itinerary_page.dart';
+import 'package:nashik/features/category/domain/usecases/get_category_by_id.dart';
 import 'package:nashik/features/places/domain/repositories/place_repository.dart';
 import 'package:nashik/features/places/presentation/pages/category_detail_page.dart';
 import 'package:nashik/features/places/presentation/pages/place_detail_page.dart';
@@ -189,6 +190,7 @@ class FeatureRoutes {
             child: CategoryDetailPage(
               categoryId: categoryId,
               placeRepository: locator<PlaceRepository>(),
+              getCategoryById: locator<GetCategoryById>(),
             ),
             state: state,
           );

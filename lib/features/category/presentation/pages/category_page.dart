@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nashik/core/router/route_names.dart';
-
-import '../../../places/domain/entities/category.dart';
-import '../../../places/domain/repositories/place_repository.dart';
-import '../../../places/presentation/widgets/event_card.dart';
+import 'package:nashik/features/category/domain/entities/category_entity.dart';
+import 'package:nashik/features/category/domain/repositories/category_repository.dart';
+import 'package:nashik/features/category/domain/usecases/get_categories.dart';
+import 'package:nashik/features/places/domain/repositories/place_repository.dart';
+import 'package:nashik/features/places/presentation/widgets/event_card.dart';
 import '../widgets/spiritual_circuit_card.dart';
 
 /// Returns a [TextStyle] with Roboto as the font family (safe fallback when
@@ -27,11 +27,16 @@ TextStyle _getFallbackTextStyle({
 }
 
 /// Category Page
-/// Main page showing all categories, accessible from bottom navigation bar.
-/// [placeRepository] is injected via DI (presentation depends on domain only).
+/// Main page showing all categories from API (API_BASE_URL/categories).
+/// Only [status == 'published'] categories are shown.
 class CategoryPage extends StatefulWidget {
-  const CategoryPage({super.key, required this.placeRepository});
+  const CategoryPage({
+    super.key,
+    required this.getCategories,
+    required this.placeRepository,
+  });
 
+  final GetCategories getCategories;
   final PlaceRepository placeRepository;
 
   @override
@@ -39,11 +44,9 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  List<Category> _categories = [];
+  List<CategoryEntity> _categories = [];
   bool _isLoading = true;
-  final Set<String> _favoriteCategories = {}; // Track favorite categories
-
-  PlaceRepository get _repository => widget.placeRepository;
+  final Set<String> _favoriteCategories = {};
 
   @override
   void initState() {
@@ -54,23 +57,27 @@ class _CategoryPageState extends State<CategoryPage> {
   Future<void> _loadCategories() async {
     setState(() => _isLoading = true);
 
-    try {
-      final categories = await _repository.getCategories();
+    final result = await widget.getCategories(
+      const GetCategoriesParams(status: 'published'),
+    );
 
-      if (mounted) {
-        setState(() {
-          _categories = categories;
-          _isLoading = false;
-        });
-      }
-    } catch (e, _) {
-      if (mounted) {
+    if (!mounted) return;
+    result.fold(
+      (failure) {
         setState(() {
           _categories = [];
           _isLoading = false;
         });
-      }
-    }
+      },
+      (CategoryListResult data) {
+        setState(() {
+          _categories = data.items
+              .where((e) => e.status == 'published')
+              .toList();
+          _isLoading = false;
+        });
+      },
+    );
   }
 
   @override
@@ -241,159 +248,144 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
-  Widget _buildCategoryCard(Category category) {
+  Widget _buildCategoryCard(CategoryEntity category) {
     try {
       final isFavorite = _favoriteCategories.contains(category.id);
-      
+      final imageUrl = category.imageUrl;
+      final subtitle = category.subtitle ?? 'Discover the spiritual side of nashik';
+
       return InkWell(
-      onTap: () {
-        context.pushNamed(
-          AppRouteNames.categoryDetail,
-          pathParameters: {'categoryId': category.id},
-        );
-      },
-      borderRadius: BorderRadius.circular(11.r),
-      child: Container(
-        width: 168.w,
-        height: 233.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(11.r),
-          color: const Color(0xFFF3F4F6), // Fallback color
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(11.r),
-          child: Stack(
-            children: [
-              // Background Image
-              Image.asset(
-                category.imagePath,
-                width: 168.w,
-                height: 233.h,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // Fallback if image fails to load
-                  return Container(
+        onTap: () {
+          context.pushNamed(
+            AppRouteNames.categoryDetail,
+            pathParameters: {'categoryId': category.id},
+          );
+        },
+        borderRadius: BorderRadius.circular(11.r),
+        child: Container(
+          width: 168.w,
+          height: 233.h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11.r),
+            color: const Color(0xFFF3F4F6),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(11.r),
+            child: Stack(
+              children: [
+                // Background image (dynamic from API image_url)
+                if (imageUrl != null && imageUrl.isNotEmpty)
+                  Image.network(
+                    imageUrl,
                     width: 168.w,
                     height: 233.h,
-                    color: const Color(0xFFF3F4F6),
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: Colors.grey,
-                      size: 40.sp,
-                    ),
-                  );
-                },
-              ),
-              // Linear gradient overlay (0% to 50% black)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(11.r),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.0), // 0% black at top
-                      Colors.black.withValues(alpha: 0.5), // 50% black at bottom
-                    ],
-                  ),
-                ),
-              ),
-              // Favorite icon (top right)
-              Positioned(
-                top: 12.h,
-                right: 12.w,
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      if (isFavorite) {
-                        _favoriteCategories.remove(category.id);
-                      } else {
-                        _favoriteCategories.add(category.id);
-                      }
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(9999.r),
-                  child: Container(
-                    padding: EdgeInsets.all(4.w),
-                    child: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? Colors.red : Colors.white,
-                      size: 20.sp,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+                  )
+                else
+                  _buildPlaceholderImage(),
+                // Gradient overlay
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(11.r),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.0),
+                        Colors.black.withValues(alpha: 0.5),
+                      ],
                     ),
                   ),
                 ),
-              ),
-              // Bottom content
-              Positioned(
-                bottom: 12.h,
-                left: 12.w,
-                right: 12.w,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Icon container (left bottom)
-                    Container(
-                      width: 31.w,
-                      height: 31.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFBAC9FF),
-                        borderRadius: BorderRadius.circular(9999.r),
-                        border: Border.all(
-                          color: const Color(0xFFE5E7EB),
-                          width: 1,
-                        ),
+                // Favorite icon (top right)
+                Positioned(
+                  top: 12.h,
+                  right: 12.w,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (isFavorite) {
+                          _favoriteCategories.remove(category.id);
+                        } else {
+                          _favoriteCategories.add(category.id);
+                        }
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(9999.r),
+                    child: Container(
+                      padding: EdgeInsets.all(4.w),
+                      child: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.white,
+                        size: 20.sp,
                       ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          category.iconPath,
-                          width: 16.w,
-                          height: 16.h,
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+                // Bottom content: icon (from API "icon" e.g. "category"), name, subtitle
+                Positioned(
+                  bottom: 12.h,
+                  left: 12.w,
+                  right: 12.w,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 31.w,
+                        height: 31.h,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFBAC9FF),
+                          borderRadius: BorderRadius.circular(9999.r),
+                          border: Border.all(
+                            color: const Color(0xFFE5E7EB),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            category.icon == 'category'
+                                ? Icons.category
+                                : Icons.category_outlined,
+                            color: Colors.white,
+                            size: 16.sp,
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 8.h),
-                    // Category Name
-                    Text(
-                      category.name,
-                      style: _getFallbackTextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600, // SemiBold
-                        color: Colors.white,
-                        height: 1.2,
+                      SizedBox(height: 8.h),
+                      Text(
+                        category.name,
+                        style: _getFallbackTextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.left,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 4.h),
-                    // Sub heading (description)
-                    Text(
-                      category.description,
-                      style: _getFallbackTextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w400, // Regular
-                        color: Colors.white,
-                        height: 1.2,
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        style: _getFallbackTextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.left,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
     } catch (e, _) {
-      // Return a placeholder card if there's an error
       return Container(
         width: 168.w,
         height: 233.h,
@@ -416,5 +408,18 @@ class _CategoryPageState extends State<CategoryPage> {
         ),
       );
     }
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      width: 168.w,
+      height: 233.h,
+      color: const Color(0xFFF3F4F6),
+      child: Icon(
+        Icons.image_not_supported,
+        color: Colors.grey,
+        size: 40.sp,
+      ),
+    );
   }
 }

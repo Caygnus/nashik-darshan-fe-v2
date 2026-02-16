@@ -6,7 +6,11 @@ class CategoryResponseModel {
     required this.id,
     required this.name,
     required this.slug,
+    this.subtitle,
+    this.shortDescription,
     this.description,
+    this.imageUrl,
+    this.icon,
     this.status,
     this.createdAt,
     this.updatedAt,
@@ -18,7 +22,11 @@ class CategoryResponseModel {
   final String id;
   final String name;
   final String slug;
+  final String? subtitle;
+  final String? shortDescription;
   final String? description;
+  final String? imageUrl;
+  final String? icon;
   final String? status;
   final String? createdAt;
   final String? updatedAt;
@@ -31,7 +39,11 @@ class CategoryResponseModel {
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       slug: json['slug'] as String? ?? '',
+      subtitle: json['subtitle'] as String?,
+      shortDescription: json['short_description'] as String?,
       description: json['description'] as String?,
+      imageUrl: json['image_url'] as String?,
+      icon: json['icon'] as String?,
       status: json['status'] as String?,
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
@@ -48,7 +60,11 @@ class CategoryResponseModel {
       id: id,
       name: name,
       slug: slug,
+      subtitle: subtitle,
+      shortDescription: shortDescription,
       description: description,
+      imageUrl: imageUrl,
+      icon: icon,
       status: status,
       createdAt: createdAt,
       updatedAt: updatedAt,

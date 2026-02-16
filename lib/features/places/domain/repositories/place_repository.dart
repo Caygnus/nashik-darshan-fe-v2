@@ -22,6 +22,7 @@ abstract class PlaceRepository {
     String? order,
     List<String>? slug,
     List<String>? placeTypes,
+    String? categoryId,
     String? searchQuery,
     double? minRatingAvg,
     int? minRatingCount,

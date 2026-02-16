@@ -14,6 +14,7 @@ abstract class PlaceRemoteDataSource {
     String? order,
     List<String>? slug,
     List<String>? placeTypes,
+    String? categoryId,
     String? searchQuery,
     double? minRatingAvg,
     int? minRatingCount,
@@ -42,6 +43,7 @@ class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
     String? order,
     List<String>? slug,
     List<String>? placeTypes,
+    String? categoryId,
     String? searchQuery,
     double? minRatingAvg,
     int? minRatingCount,
@@ -59,6 +61,9 @@ class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
     if (slug != null && slug.isNotEmpty) queryParams['slug'] = slug;
     if (placeTypes != null && placeTypes.isNotEmpty) {
       queryParams['place_types'] = placeTypes;
+    }
+    if (categoryId != null && categoryId.isNotEmpty) {
+      queryParams['category_id'] = categoryId;
     }
     if (searchQuery != null) queryParams['search_query'] = searchQuery;
     if (minRatingAvg != null) queryParams['min_rating_avg'] = minRatingAvg;
